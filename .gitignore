@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# CARLA
+*.uasset
+*.uexp
+*.ubulk
+*.umap
+*.uproject
+*.uplugin
+*.ini
+*.log
+*.pcd
+*.db
+*.db-shm
+*.db-wal
+
+# Checkpoints and logs
+checkpoints/
+logs/
+*.zip
+*.pt
+*.pth
+*.pkl
+*.json
+*.png
+*.jpg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.bak
+*.backup
