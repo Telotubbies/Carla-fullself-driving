@@ -283,6 +283,24 @@ class SQLiteCheckpointManager:
         except Exception as e:
             logging.error(f"Failed to save episode: {e}", exc_info=True)
             self.conn.rollback()
+    def extract_checkpoint_to_temp(self, checkpoint_id: int) -> str:
+        
+        import tempfile
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute('SELECT model_data FROM checkpoints WHERE id = ?', (checkpoint_id,))
+            row = cursor.fetchone()
+            if not row or not row['model_data']:
+                raise ValueError(f"Checkpoint {checkpoint_id} not found or has no model data")
+            model_data = row['model_data']
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
+            temp_file.write(model_data)
+            temp_file.close()
+            logging.info(f"✅ Extracted checkpoint {checkpoint_id} to temp file: {temp_file.name}")
+            return temp_file.name
+        except Exception as e:
+            logging.error(f"Failed to extract checkpoint {checkpoint_id}: {e}", exc_info=True)
+            raise
     def get_latest_checkpoint_info(self) -> Optional[Dict]:
         
         try:

@@ -245,7 +245,7 @@ device:
   use_gpu: true
   gpu_id: 0
   # Mixed device settings (GPU/CPU load balancing)
-  use_mixed_device: true              # Enable automatic GPU/CPU load balancing
+  use_mixed_device: false             # Disabled: Use CUDA only for better performance and stability
   gpu_memory_threshold: 0.90         # Use CPU if GPU memory > 90% (will trigger at 98%)
   gpu_util_threshold: 0.85           # Use CPU if GPU utilization > 85%
   mixed_device_check_interval: 100   # Check GPU status every N steps

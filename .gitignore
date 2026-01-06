@@ -11,7 +11,23 @@ ENV/
 dist/
 build/
 
-# CARLA
+# CARLA Binary Files (exclude from repository)
+CarlaUE4/
+Engine/
+Tools/
+HDMaps/
+Dockerfile
+LICENSE
+VERSION
+CHANGELOG
+ImportAssets.sh
+Manifest_DebugFiles_Linux.txt
+README
+CarlaUE4.sh
+restricted_carla_shell.sh
+push_to_github.sh
+
+# CARLA Assets
 *.uasset
 *.uexp
 *.ubulk

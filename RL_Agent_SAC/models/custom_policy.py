@@ -118,26 +118,54 @@ class VisionFeaturesExtractor(BaseFeaturesExtractor):
     def forward(self, observations) -> torch.Tensor:
         
         if self.is_dict_obs:
+            try:
+                device = next(self.encoder.parameters()).device
+            except StopIteration:
+                device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             vision_obs = observations['vision']
+            if not isinstance(vision_obs, torch.Tensor):
+                vision_obs = torch.as_tensor(vision_obs)
             vision_obs = vision_obs.permute(0, 1, 4, 2, 3)
+            if vision_obs.device != device:
+                vision_obs = vision_obs.to(device)
             vision_features = self.encoder(vision_obs)
             gps_features = None
             if self.use_gps and 'gps' in observations:
                 gps_data = observations['gps']
+                if not isinstance(gps_data, torch.Tensor):
+                    gps_data = torch.as_tensor(gps_data)
+                if gps_data.device != device:
+                    gps_data = gps_data.to(device)
                 gps_features = self.gps_encoder(gps_data)
             goal_features = None
             if self.use_goal and 'goal' in observations and 'distance_to_goal' in observations:
                 goal_data = observations['goal']
                 distance_data = observations['distance_to_goal']
+                if not isinstance(goal_data, torch.Tensor):
+                    goal_data = torch.as_tensor(goal_data)
+                if not isinstance(distance_data, torch.Tensor):
+                    distance_data = torch.as_tensor(distance_data)
+                if goal_data.device != device:
+                    goal_data = goal_data.to(device)
+                if distance_data.device != device:
+                    distance_data = distance_data.to(device)
                 goal_input = torch.cat([goal_data, distance_data], dim=-1)
                 goal_features = self.goal_encoder(goal_input)
             waypoint_features = None
             if self.use_waypoint and 'waypoint' in observations:
                 waypoint_data = observations['waypoint']
+                if not isinstance(waypoint_data, torch.Tensor):
+                    waypoint_data = torch.as_tensor(waypoint_data)
+                if waypoint_data.device != device:
+                    waypoint_data = waypoint_data.to(device)
                 waypoint_features = self.waypoint_encoder(waypoint_data)
             velocity_features = None
             if self.use_velocity and 'velocity' in observations:
                 velocity_data = observations['velocity']
+                if not isinstance(velocity_data, torch.Tensor):
+                    velocity_data = torch.as_tensor(velocity_data)
+                if velocity_data.device != device:
+                    velocity_data = velocity_data.to(device)
                 velocity_features = self.velocity_encoder(velocity_data)
             feature_list = [vision_features]
             if gps_features is not None:

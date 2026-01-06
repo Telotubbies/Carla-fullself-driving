@@ -17,19 +17,19 @@ import json
 BASE_DIR = Path("/home/a/Desktop/CARLA_0.9.16/RL_Agent_SAC")
 CARLA_DIR = Path("/home/a/Desktop/CARLA_0.9.16")
 LOG_DIR = BASE_DIR / "logs"
-CHECKPOINT_DIR = BASE_DIR / "checkpoints_new/checkpoint"
+CHECKPOINT_DIR = BASE_DIR / "checkpoints/checkpoint"
 CONFIG_FILE = BASE_DIR / "config/sac_config.yaml"
 AUTO_LOG_FILE = LOG_DIR / "auto_manage.log"
 TRAINING_LOG = LOG_DIR / "rl_training_new.log"
 PID_FILE = BASE_DIR / ".auto_manage.pid"
 CARLA_PORT = 2000
-HEALTH_CHECK_INTERVAL = 60
-STUCK_THRESHOLD = 3600
-MIN_TRAINING_AGE = 300
+HEALTH_CHECK_INTERVAL = 30
+STUCK_THRESHOLD = 1800
+MIN_TRAINING_AGE = 60
 CARLA_FAILURE_THRESHOLD = 3
-CARLA_COOLDOWN_PERIOD = 600
+CARLA_COOLDOWN_PERIOD = 300
 DASHBOARD_PORT = 5001
-RESTART_COOLDOWN = 300
+RESTART_COOLDOWN = 60
 logging.basicConfig(
     filename=AUTO_LOG_FILE,
     level=logging.INFO,
@@ -56,11 +56,14 @@ def find_processes(pattern: str) -> list[psutil.Process]:
 def get_latest_checkpoint():
     
     if not CHECKPOINT_DIR.exists():
+        logger.debug(f"Checkpoint directory does not exist: {CHECKPOINT_DIR}")
         return None
     zip_files = list(CHECKPOINT_DIR.glob("rl_model_*_steps.zip"))
     if not zip_files:
+        logger.debug(f"No checkpoint files found in {CHECKPOINT_DIR}")
         return None
     latest = max(zip_files, key=lambda p: p.stat().st_mtime)
+    logger.info(f"✅ Found checkpoint: {latest.name} ({latest.stat().st_size / (1024*1024):.1f} MB)")
     return str(latest)
 def get_best_checkpoint_by_reward(min_reward: float = -float('inf')):
     
@@ -71,13 +74,14 @@ def get_best_checkpoint_by_reward(min_reward: float = -float('inf')):
         import sqlite3
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute(, (min_reward,))
+        cursor.execute('SELECT timestep, reward FROM checkpoints WHERE reward >= ? ORDER BY reward DESC LIMIT 1', (min_reward,))
         result = cursor.fetchone()
         conn.close()
         if result:
-            path = result[0]
-            if Path(path).exists():
-                return path
+            timestep = result[0]
+            checkpoint_file = CHECKPOINT_DIR / f"rl_model_{timestep}_steps.zip"
+            if checkpoint_file.exists():
+                return str(checkpoint_file)
     except Exception as e:
         logger.debug(f"Error reading checkpoint DB: {e}")
     return None
