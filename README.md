@@ -47,7 +47,7 @@ This project implements a complete autonomous driving system using **Soft Actor-
 
 ### Core Capabilities
 
-- **Vision-Based Perception**: Multi-modal observation processing (RGB camera, GPS, waypoints, velocity)
+- **Vision-Based Perception**: Multi-modal observation processing using **ResNet18 pretrained** encoder (ImageNet) for RGB camera, plus GPS, waypoints, velocity
 - **Continuous Control**: Smooth steering, throttle, and brake actions
 - **Goal-Directed Navigation**: Dynamic route planning and goal reaching
 - **Collision Avoidance**: Reactive obstacle detection and avoidance
@@ -155,7 +155,7 @@ sequenceDiagram
 ### Component Details
 
 #### 1. **Observation Space**
-- **Vision**: RGB camera frames (84x84x3) processed through CNN encoder
+- **Vision**: RGB camera frames (84x84x3) processed through **ResNet18/ResNet34** encoder (ImageNet pretrained)
 - **GPS**: Current position (x, y, z)
 - **Waypoints**: Next 3 waypoints for route planning
 - **Velocity**: Current speed vector
@@ -378,8 +378,9 @@ environment:
 
 #### 2. **Custom Policy** (`RL_Agent_SAC/models/custom_policy.py`)
 - Multi-modal observation processing
-- Vision encoder for RGB images
+- **ResNet18/ResNet34 pretrained encoder** (ImageNet) for RGB images
 - Separate encoders for GPS, waypoints, velocity
+- Supports both pretrained ResNet and custom CNN encoders
 
 #### 3. **Auto-Manager** (`RL_Agent_SAC/scripts/training/auto_manage.py`)
 - Monitors CARLA, training, and dashboard processes
