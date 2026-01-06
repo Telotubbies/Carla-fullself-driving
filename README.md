@@ -347,7 +347,7 @@ environment:
 │   │   └── world_manager.py    # World and agent management
 │   ├── models/                 # Neural network models
 │   │   ├── custom_policy.py    # SAC policy with vision encoder
-│   │   ├── vision_encoder.py   # CNN for image processing
+│   │   ├── vision_encoder.py   # ResNet/CNN encoder (ImageNet pretrained)
 │   │   └── sac_policy.py       # SAC-specific policy
 │   ├── training/               # Training scripts
 │   │   └── train_sac.py        # Main training script
