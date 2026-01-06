@@ -119,7 +119,7 @@ class SQLiteCheckpointManager:
                 conn.execute('PRAGMA temp_store=MEMORY')
                 self._thread_connections[current_thread_id] = conn
                 logging.debug(f"Created new SQLite connection for thread {current_thread_id}")
-            return self._thread_connections[current_thread_id]
+        return self._thread_connections[current_thread_id]
     def save_checkpoint(
         self,
         model: Any,
@@ -239,7 +239,7 @@ class SQLiteCheckpointManager:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO training_stats 
-                (timestep, iteration, mean_reward, mean_episode_length, learning_rate, 
+                (timestep, iteration, mean_reward, mean_episode_length, learning_rate,
                  value_loss, policy_loss, entropy_loss, fps, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
@@ -272,7 +272,7 @@ class SQLiteCheckpointManager:
             cursor = self.conn.cursor()
             cursor.execute('''
                 INSERT INTO episodes 
-                (episode_num, timestep_start, timestep_end, reward, length, 
+                (episode_num, timestep_start, timestep_end, reward, length,
                  collision, goal_reached, distance_to_goal, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
