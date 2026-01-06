@@ -388,29 +388,38 @@ observations:
 .
 ├── RL_Agent_SAC/              # Main SAC training code
 │   ├── carla_env/              # CARLA environment wrapper
-│   │   ├── carla_rl_env.py     # Main RL environment
+│   │   ├── carla_rl_env.py     # Main RL environment (Dict observation space)
 │   │   ├── carla_connection.py # CARLA client connection
-│   │   └── world_manager.py    # World and agent management
+│   │   ├── world_manager.py    # World and agent management
+│   │   └── lane_detector.py    # Lane detection utilities
 │   ├── models/                 # Neural network models
-│   │   ├── custom_policy.py    # SAC policy with vision encoder
-│   │   ├── vision_encoder.py   # ResNet/CNN encoder (ImageNet pretrained)
-│   │   └── sac_policy.py       # SAC-specific policy
+│   │   ├── custom_policy.py    # SAC policy with multi-modal encoder
+│   │   ├── vision_encoder.py   # ResNet18 encoder (ImageNet pretrained)
+│   │   ├── sac_policy.py       # SAC-specific policy
+│   │   └── vision_encoder.py   # ResNet/CNN with temporal LSTM
 │   ├── training/               # Training scripts
-│   │   └── train_sac.py        # Main training script
+│   │   └── train_sac.py        # Main SAC training script
 │   ├── utils/                  # Utility functions
-│   │   ├── sqlite_checkpoint.py # Checkpoint management
-│   │   └── logging_utils.py     # Logging utilities
+│   │   ├── sqlite_checkpoint.py # SQLite checkpoint management
+│   │   ├── logging_utils.py    # Logging utilities
+│   │   ├── mixed_device_manager.py # GPU/CPU load balancing
+│   │   └── data_augmentation.py # Image augmentation
 │   ├── scripts/                # Automation scripts
 │   │   └── training/
 │   │       ├── auto_manage.py   # Auto-management system
-│   │       └── auto_manage.sh  # Management script
+│   │       └── auto_manage.sh   # Management script
 │   ├── web_dashboard/           # Web dashboard
 │   │   ├── app_fastapi.py       # FastAPI backend
-│   │   └── templates/          # Dashboard UI
+│   │   └── templates/           # Dashboard UI
 │   ├── config/                  # Configuration files
-│   │   └── sac_config.yaml      # Main config
+│   │   └── sac_config.yaml      # Main config (all hyperparameters)
 │   ├── checkpoints/             # Saved models
+│   │   ├── checkpoint/          # Standard checkpoints
+│   │   ├── best_model/          # Best model by reward
+│   │   └── training_checkpoints.db # SQLite database
 │   └── logs/                    # Training logs
+│       ├── rl_training_new.log  # Main training log
+│       └── auto_manage.log      # Auto-manager log
 ├── README.md                     # This file
 └── PROJECT_STATUS.md             # Project status report
 ```
