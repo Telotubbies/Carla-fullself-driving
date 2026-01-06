@@ -155,11 +155,15 @@ sequenceDiagram
 ### Component Details
 
 #### 1. **Observation Space**
-- **Vision**: RGB camera frames (84x84x3) processed through **ResNet18/ResNet34** encoder (ImageNet pretrained)
-- **GPS**: Current position (x, y, z)
-- **Waypoints**: Next 3 waypoints for route planning
-- **Velocity**: Current speed vector
-- **Goal**: Target destination and distance
+- **Vision**: RGB + Depth camera frames (160x90x4, 4-frame stack) processed through **ResNet18** encoder (ImageNet pretrained)
+  - Image size: 160x90 (width x height)
+  - Sequence length: 4 frames (temporal stacking)
+  - Channels: 4 (RGB + Depth)
+  - Encoder: ResNet18 with ImageNet pretrained weights
+- **GPS**: Current position (x, y, z) - 3D coordinates
+- **Waypoints**: Next waypoints for route planning - 8D vector
+- **Velocity**: Current speed vector - 5D (linear + angular velocity)
+- **Goal**: Target destination and distance - 4D (goal location + distance)
 
 #### 2. **Action Space**
 - **Steering**: Continuous [-1.0, 1.0]
@@ -167,11 +171,15 @@ sequenceDiagram
 - **Brake**: Continuous [0.0, 1.0]
 
 #### 3. **Reward Function**
-- **Progress**: Distance traveled toward goal
-- **Lane Keeping**: Bonus for staying in lane
-- **Speed**: Reward for maintaining appropriate speed
-- **Collision Penalty**: Large negative reward
-- **Goal Reaching**: Large positive reward
+- **Progress Reward**: 2.0 per step (normalized)
+- **Lane Center Reward**: 5.0 for staying in lane center
+- **Speed Reward**: 2.0 for maintaining target speed (70 km/h)
+- **Smooth Steering Reward**: 1.0 for smooth control
+- **Goal Reached Reward**: 500.0 (large positive)
+- **Collision Penalty**: -20.0 (large negative)
+- **Off-Lane Penalty**: -2.0
+- **Low/High Speed Penalties**: -0.02 / 0.1
+- **Jerk Penalty**: -0.1 for abrupt acceleration changes
 
 ---
 
@@ -313,9 +321,25 @@ training:
 device:
   use_gpu: true
   gpu_id: 0
-  use_mixed_device: false  # Set to true for GPU/CPU balancing
-  gpu_memory_threshold: 0.85
-  gpu_util_threshold: 0.90
+  use_mixed_device: false      # Disabled: Use CUDA only for better performance
+  gpu_memory_threshold: 0.90
+  gpu_util_threshold: 0.85
+```
+
+#### Vision Encoder Configuration
+
+```yaml
+network:
+  vision_encoder:
+    type: ResNet                # ResNet18 pretrained
+    pretrained: true            # ImageNet pretrained weights
+    resnet_type: resnet18
+    freeze_early_layers: false  # All layers trainable
+    output_size: 512
+  temporal:
+    type: lstm
+    hidden_size: 256
+    num_layers: 2
 ```
 
 #### Environment Settings
@@ -326,10 +350,32 @@ environment:
   carla_port: 2000
   no_rendering_mode: true
   enable_traffic: false
+  town: Town01_Opt
+  vehicle:
+    blueprint: vehicle.tesla.model3
+    spawn_random: true
   curriculum_learning:
     enabled: true
     initial_difficulty: 0.0
     max_difficulty: 1.0
+    reward_based: true
+    difficulty_increase_rate: 0.005
+```
+
+#### Observation Settings
+
+```yaml
+observations:
+  image_size: [160, 90]        # Width x Height
+  stack_frames: 4              # Temporal stacking
+  use_depth: true              # RGB + Depth = 4 channels
+  use_gps: true
+  use_goal: true
+  use_waypoint: true
+  use_velocity: true
+  augmentation:
+    enabled: true
+    methods: [color_jitter, gaussian_noise, motion_blur, random_erasing]
 ```
 
 ---
