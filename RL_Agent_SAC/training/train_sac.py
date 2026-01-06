@@ -356,6 +356,17 @@ def setup_callbacks(config: dict, dirs: dict, eval_env=None, sqlite_manager=None
                 self.last_save_timestep = step
         def _save_checkpoint_sync(self, step, model):
             
+            import torch
+            # Store original device before save
+            original_device = None
+            try:
+                if hasattr(model, 'device'):
+                    original_device = str(model.device)
+                elif hasattr(model, 'policy') and hasattr(model.policy, 'device'):
+                    original_device = str(model.policy.device)
+            except:
+                pass
+            
             try:
                 logging.info(f"💾 Starting checkpoint save for step {step}...")
                 if self.save_format in ['old', 'both']:
@@ -382,8 +393,30 @@ def setup_callbacks(config: dict, dirs: dict, eval_env=None, sqlite_manager=None
                             raise save_error[0]
                         save_time = time.time() - start_time
                         logging.info(f"✅ Checkpoint save completed in {save_time:.2f}s: {old_path}")
+                        
+                        # Restore model device after save
+                        if original_device:
+                            try:
+                                import torch
+                                device_obj = torch.device(original_device)
+                                if hasattr(model, 'policy'):
+                                    model.policy = model.policy.to(device_obj)
+                                if hasattr(model, 'device'):
+                                    model.device = device_obj
+                                logging.debug(f"✅ Model device restored to {original_device} after checkpoint save")
+                            except Exception as e:
+                                logging.warning(f"⚠️  Could not restore model device after checkpoint: {e}")
                     except Exception as e:
                         logging.error(f"❌ Checkpoint save error: {e}", exc_info=True)
+                        # Try to restore device even on error
+                        if original_device:
+                            try:
+                                import torch
+                                device_obj = torch.device(original_device)
+                                if hasattr(model, 'policy'):
+                                    model.policy = model.policy.to(device_obj)
+                            except:
+                                pass
                         return
                     if os.path.exists(old_path):
                         if self.config is not None:
@@ -507,7 +540,15 @@ def setup_callbacks(config: dict, dirs: dict, eval_env=None, sqlite_manager=None
                 return True
             def _save_checkpoint_async(self, model, timestep, episode, reward, metadata):
                 
+                import torch
+                original_device = None
                 try:
+                    # Store original device before save
+                    if hasattr(model, 'device'):
+                        original_device = model.device
+                    elif hasattr(model, 'policy') and hasattr(model.policy, 'device'):
+                        original_device = model.policy.device
+                    
                     self.sqlite_manager.save_checkpoint(
                         model=model,
                         timestep=timestep,
@@ -516,8 +557,27 @@ def setup_callbacks(config: dict, dirs: dict, eval_env=None, sqlite_manager=None
                         metadata=metadata
                     )
                     logging.info(f"💾 SQLite checkpoint saved at timestep {timestep}")
+                    
+                    # Ensure model is still on correct device after save
+                    if original_device:
+                        try:
+                            if hasattr(model, 'policy'):
+                                model.policy = model.policy.to(original_device)
+                            if hasattr(model, 'device'):
+                                model.device = original_device
+                            logging.debug(f"✅ Model device restored to {original_device} after checkpoint save")
+                        except Exception as e:
+                            logging.warning(f"⚠️  Could not restore model device after checkpoint: {e}")
+                            
                 except Exception as e:
                     logging.error(f"Failed to save SQLite checkpoint: {e}", exc_info=True)
+                    # Try to restore device even on error
+                    if original_device:
+                        try:
+                            if hasattr(model, 'policy'):
+                                model.policy = model.policy.to(original_device)
+                        except:
+                            pass
                 finally:
                     self.save_in_progress = False
             def _on_rollout_end(self) -> None:

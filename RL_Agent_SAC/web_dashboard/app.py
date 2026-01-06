@@ -47,7 +47,7 @@ def get_latest_checkpoint():
             if count == 0:
                 conn.close()
                 return None
-            cursor.execute()
+            cursor.execute("SELECT * FROM checkpoints ORDER BY timestep DESC LIMIT 1")
             row = cursor.fetchone()
             conn.close()
             if row:
@@ -71,7 +71,7 @@ def get_all_checkpoints():
         conn = sqlite3.connect(str(CHECKPOINT_DB))
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute()
+        cursor.execute("SELECT * FROM checkpoints ORDER BY timestep DESC")
         rows = cursor.fetchall()
         conn.close()
         return [dict(row) for row in rows]
@@ -162,13 +162,16 @@ def parse_training_metrics(log_file):
                         if match:
                             metrics['current_step'] = int(match.group(1))
                             break
+                # Don't use Callback: Step as it's local step, not global timestep
+                # Only use total_timesteps from rollout table
                 if metrics['current_step'] == 0:
-                    for line in reversed(last_lines):
-                        if 'Callback: Step' in line:
-                            match = re.search(r'Callback: Step (\d+)', line)
-                            if match:
-                                metrics['current_step'] = int(match.group(1))
-                                break
+                    # Try to find from checkpoint if available
+                    try:
+                        checkpoint = get_latest_checkpoint()
+                        if checkpoint and checkpoint.get('timestep'):
+                            metrics['current_step'] = checkpoint['timestep']
+                    except:
+                        pass
             if metrics['episode_length'] is None:
                 for line in reversed(last_lines):
                     if 'Episode length:' in line:

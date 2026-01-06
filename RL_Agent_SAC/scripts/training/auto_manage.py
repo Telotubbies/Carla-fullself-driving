@@ -475,17 +475,37 @@ if __name__ == "__main__":
     else:
         auto_manage_procs = find_processes("auto_manage.py")
         running_healthy = False
+        current_pid = os.getpid()
         for proc in auto_manage_procs:
             try:
                 if "RL_Agent_SAC" in ' '.join(proc.cmdline() or []):
+                    # Skip self
+                    if proc.pid == current_pid:
+                        continue
                     try:
                         proc_status = proc.status()
                         proc_memory = proc.memory_info().rss / 1024 / 1024
-                        if proc_status in ['running', 'sleeping'] and proc_memory > 1:
-                            running_healthy = True
-                            logger.info(f"Found healthy auto_manage process PID {proc.pid}, keeping it")
-                            print("Auto_manage is already running and healthy. Skipping restart.")
-                            break
+                        # Check if process is actually running monitor_loop (has "run" argument)
+                        cmdline_str = ' '.join(proc.cmdline() or [])
+                        is_monitor_loop = 'run' in cmdline_str or 'monitor_loop' in cmdline_str
+                        # Only consider healthy if it's actually running the monitor loop
+                        if proc_status in ['running', 'sleeping'] and proc_memory > 1 and is_monitor_loop:
+                            # Double check: verify it's actually doing work (check log activity)
+                            try:
+                                log_mtime = os.path.getmtime(AUTO_LOG_FILE) if AUTO_LOG_FILE.exists() else 0
+                                time_since_log = time.time() - log_mtime
+                                # If log hasn't been updated in last 5 minutes, process might be stuck
+                                if time_since_log < 300:
+                                    running_healthy = True
+                                    logger.info(f"Found healthy auto_manage process PID {proc.pid}, keeping it")
+                                    print("Auto_manage is already running and healthy. Skipping restart.")
+                                    break
+                                else:
+                                    logger.warning(f"Found auto_manage process PID {proc.pid} but log stale ({time_since_log:.0f}s), will restart")
+                            except:
+                                running_healthy = True
+                                logger.info(f"Found healthy auto_manage process PID {proc.pid}, keeping it")
+                                break
                     except:
                         pass
             except (psutil.NoSuchProcess, psutil.AccessDenied):

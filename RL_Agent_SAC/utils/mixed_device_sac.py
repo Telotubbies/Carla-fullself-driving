@@ -57,6 +57,7 @@ class MixedDeviceSAC(SAC):
         if current_step % 100 == 0 and current_step >= self.learning_starts:
             buffer_size = 0
             if hasattr(self, 'replay_buffer'):
+                # Try multiple methods to get buffer size (DictReplayBuffer doesn't support len())
                 if hasattr(self.replay_buffer, 'size'):
                     try:
                         buffer_size = self.replay_buffer.size
@@ -64,9 +65,18 @@ class MixedDeviceSAC(SAC):
                         pass
                 if buffer_size == 0:
                     try:
+                        # Try len() first (works for regular ReplayBuffer)
                         buffer_size = len(self.replay_buffer)
                     except (TypeError, AttributeError):
-                        buffer_size = getattr(self.replay_buffer, 'pos', 0)
+                        # DictReplayBuffer doesn't support len(), try other methods
+                        try:
+                            buffer_size = getattr(self.replay_buffer, 'pos', 0)
+                        except (AttributeError, TypeError):
+                            try:
+                                # Try buffer_size attribute
+                                buffer_size = getattr(self.replay_buffer, 'buffer_size', 0)
+                            except (AttributeError, TypeError):
+                                buffer_size = 0
             logging.info(f"🔄 Training from replay buffer: step={current_step}, buffer_size={buffer_size}, gradient_steps={gradient_steps}, batch_size={adjusted_batch_size}, GPU batches: {gpu_batch_count}, CPU batches: {cpu_batch_count}")
         if gpu_batch_count > 0:
             try:
@@ -108,12 +118,38 @@ class MixedDeviceSAC(SAC):
                 logging.debug(f"Processed {cpu_batch_count} batches on CPU")
             except Exception as e:
                 logging.warning(f"Error processing CPU batches: {e}, falling back to GPU")
-                original_device = self.device
-                self.device = self.mixed_device_manager.gpu_device
-                super().train(cpu_batch_count, adjusted_batch_size)
-                self.device = original_device
-                if use_mixed:
-                    self.mixed_device_manager.stats['gpu_batches'] += cpu_batch_count
+                # CRITICAL: Ensure ALL models are restored to GPU before fallback
+                try:
+                    gpu_device = self.mixed_device_manager.gpu_device
+                    # Restore policy (actor in SAC)
+                    if hasattr(self, 'policy') and self.policy is not None:
+                        self.policy = self.policy.to(gpu_device)
+                        # Also ensure policy.actor is on GPU if it exists
+                        if hasattr(self.policy, 'actor') and self.policy.actor is not None:
+                            self.policy.actor = self.policy.actor.to(gpu_device)
+                    # Restore critic networks
+                    if hasattr(self, 'critic') and self.critic is not None:
+                        self.critic = self.critic.to(gpu_device)
+                    if hasattr(self, 'critic_target') and self.critic_target is not None:
+                        self.critic_target = self.critic_target.to(gpu_device)
+                    # Ensure device attribute is set correctly
+                    self.device = gpu_device
+                    logging.debug(f"✅ All models restored to GPU ({gpu_device}) before fallback")
+                except Exception as restore_error:
+                    logging.error(f"❌ CRITICAL: Error restoring GPU devices: {restore_error}")
+                    # Try to continue anyway, but log the error
+                
+                # Fallback: run on GPU
+                try:
+                    original_device = self.device
+                    self.device = self.mixed_device_manager.gpu_device
+                    super().train(cpu_batch_count, adjusted_batch_size)
+                    self.device = original_device
+                    if use_mixed:
+                        self.mixed_device_manager.stats['gpu_batches'] += cpu_batch_count
+                except Exception as fallback_error:
+                    logging.error(f"❌ CRITICAL: Fallback to GPU also failed: {fallback_error}")
+                    raise  # Re-raise to let caller handle
         return
     def _sample_action(
         self,

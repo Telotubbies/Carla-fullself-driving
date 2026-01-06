@@ -345,7 +345,19 @@ class SQLiteCheckpointManager:
         
         import tempfile
         import shutil
+        import torch
         logging.info(f"💾 Starting model serialization...")
+        
+        # Store original device before save
+        original_device = None
+        try:
+            if hasattr(model, 'device'):
+                original_device = str(model.device)
+            elif hasattr(model, 'policy') and hasattr(model.policy, 'device'):
+                original_device = str(model.policy.device)
+        except:
+            pass
+        
         with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
             tmp_path = tmp_file.name
         try:
@@ -358,6 +370,19 @@ class SQLiteCheckpointManager:
             logging.info(f"💾 Compressing model data...")
             compressed = gzip.compress(data)
             logging.info(f"💾 Compressed size: {len(compressed) / (1024*1024):.2f} MB")
+            
+            # Ensure model is still on correct device after save
+            if original_device:
+                try:
+                    device_obj = torch.device(original_device)
+                    if hasattr(model, 'policy'):
+                        model.policy = model.policy.to(device_obj)
+                    if hasattr(model, 'device'):
+                        model.device = device_obj
+                    logging.debug(f"✅ Model device restored to {original_device}")
+                except Exception as e:
+                    logging.warning(f"⚠️  Could not restore model device: {e}")
+            
             return compressed
         finally:
             if os.path.exists(tmp_path):
