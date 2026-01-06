@@ -86,11 +86,11 @@ class MixedDeviceSAC(SAC):
                 self.device = original_device
                 if use_mixed:
                     self.mixed_device_manager.stats['gpu_batches'] += gpu_batch_count
-            except torch.cuda.OutOfMemoryError as e:
-                logging.warning(f"GPU OOM during training: {e}")
-                self.mixed_device_manager.handle_oom(current_step)
-                torch.cuda.empty_cache()
-                smaller_batch = max(adjusted_batch_size // 2, 16)
+        except torch.cuda.OutOfMemoryError as e:
+            logging.warning(f"GPU OOM during training: {e}")
+            self.mixed_device_manager.handle_oom(current_step)
+            torch.cuda.empty_cache()
+            smaller_batch = max(adjusted_batch_size // 2, 16)
                 original_device = self.device
                 self.device = self.mixed_device_manager.gpu_device
                 super().train(gpu_batch_count, smaller_batch)
