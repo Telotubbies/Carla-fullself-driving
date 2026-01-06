@@ -152,6 +152,15 @@ rewards:
   lane_change_reward: 1.0
   safe_stop_reward: 1.0
   
+  # Safety Potential Function (MDPI Paper Approach)
+  # Proactive risk assessment - penalizes risky situations before collision occurs
+  safety_potential_enabled: true
+  safety_potential_penalty_weight: 5.0  # Weight for safety potential penalty
+  safety_potential_max_range: 50.0  # Maximum detection range (meters)
+  safety_potential_alpha: 2.0  # Distance decay factor
+  safety_potential_beta: 1.5  # Velocity factor
+  safety_potential_min_ttc: 2.0  # Minimum Time-to-Collision threshold (seconds)
+  
   # Progressive rewards (disabled for now - keep it simple)
   progressive_rewards:
     enabled: false

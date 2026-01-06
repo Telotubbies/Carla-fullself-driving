@@ -797,6 +797,132 @@ class CarlaRLEnv(gym.Env):
             )
         except:
             return np.zeros(5, dtype=np.float32)
+    def _compute_safety_potential(self) -> float:
+        """
+        Compute Safety Potential Function based on MDPI paper approach.
+        This function provides proactive risk assessment by evaluating:
+        - Distance to nearby vehicles/obstacles
+        - Relative velocity (closing speed)
+        - Time-to-collision (TTC) prediction
+        
+        Returns:
+            float: Safety potential value (higher = more risk, lower = safer)
+        """
+        if not self.vehicle or not self.world:
+            return 0.0
+        
+        try:
+            # Get ego vehicle state
+            ego_transform = self.vehicle.get_transform()
+            ego_location = ego_transform.location
+            ego_velocity = self.vehicle.get_velocity()
+            ego_speed = np.sqrt(ego_velocity.x**2 + ego_velocity.y**2 + ego_velocity.z**2)
+            
+            # Get configuration parameters
+            max_detection_range = self.reward_config.get("safety_potential_max_range", 50.0)
+            safe_distance = self.reward_config.get("safe_distance", 10.0)
+            critical_distance = self.reward_config.get("critical_distance", 5.0)
+            alpha = self.reward_config.get("safety_potential_alpha", 2.0)  # Distance decay factor
+            beta = self.reward_config.get("safety_potential_beta", 1.5)  # Velocity factor
+            min_ttc = self.reward_config.get("safety_potential_min_ttc", 2.0)  # Minimum TTC threshold (seconds)
+            
+            total_potential = 0.0
+            nearby_count = 0
+            
+            # Get all vehicles in the world
+            all_actors = self.world.get_actors()
+            vehicles = [actor for actor in all_actors if actor.type_id.startswith("vehicle.") and actor.id != self.vehicle.id]
+            
+            for vehicle in vehicles:
+                try:
+                    # Get vehicle state
+                    vehicle_location = vehicle.get_location()
+                    vehicle_velocity = vehicle.get_velocity()
+                    vehicle_speed = np.sqrt(vehicle_velocity.x**2 + vehicle_velocity.y**2 + vehicle_velocity.z**2)
+                    
+                    # Calculate distance
+                    distance = ego_location.distance(vehicle_location)
+                    
+                    if distance > max_detection_range:
+                        continue
+                    
+                    # Calculate relative position vector (from ego to other vehicle)
+                    relative_pos = carla.Location(
+                        vehicle_location.x - ego_location.x,
+                        vehicle_location.y - ego_location.y,
+                        vehicle_location.z - ego_location.z
+                    )
+                    relative_distance = np.sqrt(relative_pos.x**2 + relative_pos.y**2 + relative_pos.z**2)
+                    
+                    # Calculate relative velocity vector
+                    relative_vel = carla.Vector3D(
+                        vehicle_velocity.x - ego_velocity.x,
+                        vehicle_velocity.y - ego_velocity.y,
+                        vehicle_velocity.z - ego_velocity.z
+                    )
+                    relative_speed = np.sqrt(relative_vel.x**2 + relative_vel.y**2 + relative_vel.z**2)
+                    
+                    # Calculate direction vector (normalized)
+                    if relative_distance > 0.1:  # Avoid division by zero
+                        direction = carla.Vector3D(
+                            relative_pos.x / relative_distance,
+                            relative_pos.y / relative_distance,
+                            relative_pos.z / relative_distance
+                        )
+                        
+                        # Calculate closing speed (negative = approaching, positive = receding)
+                        closing_speed = -(
+                            direction.x * relative_vel.x +
+                            direction.y * relative_vel.y +
+                            direction.z * relative_vel.z
+                        )
+                        
+                        # Calculate Time-to-Collision (TTC)
+                        if closing_speed > 0.1:  # Only if approaching
+                            ttc = relative_distance / closing_speed
+                        else:
+                            ttc = float('inf')  # Receding or stationary
+                        
+                        # Safety Potential Function (based on MDPI paper approach)
+                        # SP = exp(-distance/safe_distance) * (1 + relative_speed_factor) * (1 + ttc_factor)
+                        
+                        # Distance component: exponential decay with distance
+                        distance_factor = np.exp(-relative_distance / safe_distance)
+                        
+                        # Velocity component: higher relative speed = higher risk
+                        # Normalize relative speed (0-1 range, assuming max 100 km/h = ~27.8 m/s)
+                        max_relative_speed = 30.0  # m/s
+                        normalized_relative_speed = min(relative_speed / max_relative_speed, 1.0)
+                        velocity_factor = 1.0 + beta * normalized_relative_speed
+                        
+                        # TTC component: lower TTC = higher risk
+                        if ttc < min_ttc:
+                            ttc_factor = 1.0 + (min_ttc - ttc) / min_ttc  # Exponential increase as TTC decreases
+                        else:
+                            ttc_factor = 1.0 / (1.0 + ttc - min_ttc)  # Decrease as TTC increases
+                        
+                        # Combine components
+                        potential = distance_factor * velocity_factor * ttc_factor
+                        
+                        # Weight by distance (closer = more important)
+                        weight = np.exp(-relative_distance / (alpha * safe_distance))
+                        total_potential += potential * weight
+                        nearby_count += 1
+                        
+                except Exception as e:
+                    logging.debug(f"Error computing safety potential for vehicle {vehicle.id}: {e}")
+                    continue
+            
+            # Normalize by number of nearby vehicles (avoid scaling issues)
+            if nearby_count > 0:
+                total_potential = total_potential / nearby_count
+            
+            return total_potential
+            
+        except Exception as e:
+            logging.warning(f"Error in _compute_safety_potential: {e}")
+            return 0.0
+    
     def _compute_reward_safe(self) -> float:
         try:
             return self._compute_reward_impl()
@@ -847,6 +973,16 @@ class CarlaRLEnv(gym.Env):
         off_lane_threshold = self.reward_config.get("off_lane_threshold", tolerance * 3)
         if dist_center > off_lane_threshold:
             reward += self.reward_config.get("off_lane_penalty", -10.0)
+        
+        # Safety Potential Function (MDPI Paper Approach)
+        # Proactive risk assessment - penalize risky situations before collision occurs
+        safety_potential_enabled = self.reward_config.get("safety_potential_enabled", True)
+        if safety_potential_enabled:
+            safety_potential = self._compute_safety_potential()
+            safety_penalty_weight = self.reward_config.get("safety_potential_penalty_weight", 5.0)
+            # Higher potential = higher risk = larger penalty
+            reward -= safety_potential * safety_penalty_weight
+        
         if self.progressive_rewards_enabled:
             reward *= self.reward_scale
         return reward
