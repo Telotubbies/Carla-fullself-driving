@@ -50,7 +50,7 @@ This project implements a complete autonomous driving system using **Soft Actor-
 - **Vision-Based Perception**: Multi-modal observation processing using **ResNet18 pretrained** encoder (ImageNet) for RGB camera, plus GPS, waypoints, velocity
 - **Continuous Control**: Smooth steering, throttle, and brake actions
 - **Goal-Directed Navigation**: Dynamic route planning and goal reaching
-- **Collision Avoidance**: Reactive obstacle detection and avoidance
+- **Proactive Safety**: **Safety Potential Function** (MDPI Paper) for predictive risk assessment - prevents collisions before they occur
 - **Lane Keeping**: Intelligent lane following with lane detection
 
 ### Advanced Features
@@ -176,6 +176,11 @@ sequenceDiagram
 - **Speed Reward**: 2.0 for maintaining target speed (70 km/h)
 - **Smooth Steering Reward**: 1.0 for smooth control
 - **Goal Reached Reward**: 500.0 (large positive)
+- **Safety Potential Function** (MDPI Paper Approach): Proactive risk assessment that penalizes risky situations **before** collisions occur
+  - Distance-based risk with exponential decay
+  - Relative velocity and closing speed calculation
+  - Time-to-Collision (TTC) prediction
+  - Configurable detection range (50m), weights, and thresholds
 - **Collision Penalty**: -20.0 (large negative)
 - **Off-Lane Penalty**: -2.0
 - **Low/High Speed Penalties**: -0.02 / 0.1
