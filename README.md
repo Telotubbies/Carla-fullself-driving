@@ -219,7 +219,10 @@ sequenceDiagram
 ```bash
 # Clone repository
 git clone https://github.com/Telotubbies/Carla-fullself-driving.git
-cd Carla-fullself-driving/RL_Agent_SAC
+cd Carla-fullself-driving
+
+# Navigate to RL_Agent_SAC
+cd RL_Agent_SAC
 
 # Create virtual environment
 python3 -m venv venv
@@ -273,9 +276,9 @@ tail -f logs/rl_training_new.log
 ### Training Progress
 
 - **Current Training Step**: 500+
-- **Best Checkpoint**: Saved in `checkpoints/best_model/`
-- **Training Database**: `checkpoints/training_checkpoints.db`
-- **Latest Log**: `logs/rl_training_new.log`
+- **Best Checkpoint**: Saved in `RL_Agent_SAC/checkpoints/best_model/`
+- **Training Database**: `RL_Agent_SAC/checkpoints/training_checkpoints.db`
+- **Latest Log**: `RL_Agent_SAC/logs/rl_training_new.log`
 
 ### Key Achievements
 
@@ -336,51 +339,54 @@ environment:
 ### Project Structure
 
 ```
-RL_Agent_SAC/
-├── carla_env/              # CARLA environment wrapper
-│   ├── carla_rl_env.py     # Main RL environment
-│   ├── carla_connection.py # CARLA client connection
-│   └── world_manager.py    # World and agent management
-├── models/                 # Neural network models
-│   ├── custom_policy.py    # SAC policy with vision encoder
-│   ├── vision_encoder.py   # CNN for image processing
-│   └── sac_policy.py       # SAC-specific policy
-├── training/               # Training scripts
-│   └── train_sac.py        # Main training script
-├── utils/                  # Utility functions
-│   ├── sqlite_checkpoint.py # Checkpoint management
-│   └── logging_utils.py    # Logging utilities
-├── scripts/                # Automation scripts
-│   └── training/
-│       ├── auto_manage.py # Auto-management system
-│       └── auto_manage.sh # Management script
-├── web_dashboard/           # Web dashboard
-│   ├── app_fastapi.py      # FastAPI backend
-│   └── templates/          # Dashboard UI
-├── config/                 # Configuration files
-│   └── sac_config.yaml     # Main config
-├── checkpoints/            # Saved models
-└── logs/                   # Training logs
+.
+├── RL_Agent_SAC/              # Main SAC training code
+│   ├── carla_env/              # CARLA environment wrapper
+│   │   ├── carla_rl_env.py     # Main RL environment
+│   │   ├── carla_connection.py # CARLA client connection
+│   │   └── world_manager.py    # World and agent management
+│   ├── models/                 # Neural network models
+│   │   ├── custom_policy.py    # SAC policy with vision encoder
+│   │   ├── vision_encoder.py   # CNN for image processing
+│   │   └── sac_policy.py       # SAC-specific policy
+│   ├── training/               # Training scripts
+│   │   └── train_sac.py        # Main training script
+│   ├── utils/                  # Utility functions
+│   │   ├── sqlite_checkpoint.py # Checkpoint management
+│   │   └── logging_utils.py     # Logging utilities
+│   ├── scripts/                # Automation scripts
+│   │   └── training/
+│   │       ├── auto_manage.py   # Auto-management system
+│   │       └── auto_manage.sh  # Management script
+│   ├── web_dashboard/           # Web dashboard
+│   │   ├── app_fastapi.py       # FastAPI backend
+│   │   └── templates/          # Dashboard UI
+│   ├── config/                  # Configuration files
+│   │   └── sac_config.yaml      # Main config
+│   ├── checkpoints/             # Saved models
+│   └── logs/                    # Training logs
+├── README.md                     # This file
+└── PROJECT_STATUS.md             # Project status report
 ```
 
 ### Key Components
 
-#### 1. **CarlaRLEnv** (`carla_env/carla_rl_env.py`)
+#### 1. **CarlaRLEnv** (`RL_Agent_SAC/carla_env/carla_rl_env.py`)
 - Wraps CARLA simulator as Gym-compatible environment
 - Handles observation collection and action execution
 - Manages episode lifecycle and reward calculation
 
-#### 2. **Custom Policy** (`models/custom_policy.py`)
+#### 2. **Custom Policy** (`RL_Agent_SAC/models/custom_policy.py`)
 - Multi-modal observation processing
 - Vision encoder for RGB images
 - Separate encoders for GPS, waypoints, velocity
 
-#### 3. **Auto-Manager** (`scripts/training/auto_manage.py`)
+#### 3. **Auto-Manager** (`RL_Agent_SAC/scripts/training/auto_manage.py`)
 - Monitors CARLA, training, and dashboard processes
 - Automatic restart on failures
 - Health checks and stuck detection
 
-#### 4. **SQLite Checkpoint Manager** (`utils/sqlite_checkpoint.py`)
+#### 4. **SQLite Checkpoint Manager** (`RL_Agent_SAC/utils/sqlite_checkpoint.py`)
 - Efficient model storage in SQLite database
 - Resume training from any checkpoint
 - Metadata tracking (timestep, reward, episode)
@@ -393,6 +399,7 @@ RL_Agent_SAC/
 
 ```bash
 # Resume from latest checkpoint
+cd RL_Agent_SAC
 python training/train_sac.py --config config/sac_config.yaml --resume
 
 # Resume from specific checkpoint
@@ -404,6 +411,7 @@ python training/train_sac.py --config config/sac_config.yaml \
 
 ```bash
 # Use custom config file
+cd RL_Agent_SAC
 python training/train_sac.py --config path/to/custom_config.yaml
 ```
 
@@ -411,6 +419,7 @@ python training/train_sac.py --config path/to/custom_config.yaml
 
 ```bash
 # Start auto-management
+cd RL_Agent_SAC
 ./scripts/training/auto_manage.sh start
 
 # Check status
@@ -439,13 +448,13 @@ tail -f logs/auto_manage.log
 - Reduce `buffer_size` if needed
 
 **Training Stuck**
-- Check logs: `tail -f logs/rl_training_new.log`
-- Check auto-manager: `./scripts/training/auto_manage.sh status`
-- Restart: `./scripts/training/auto_manage.sh restart`
+- Check logs: `tail -f RL_Agent_SAC/logs/rl_training_new.log`
+- Check auto-manager: `./RL_Agent_SAC/scripts/training/auto_manage.sh status`
+- Restart: `./RL_Agent_SAC/scripts/training/auto_manage.sh restart`
 
 **Checkpoint Not Found**
 - Verify checkpoint path in config
-- Check SQLite database: `sqlite3 checkpoints/training_checkpoints.db`
+- Check SQLite database: `sqlite3 RL_Agent_SAC/checkpoints/training_checkpoints.db`
 
 ---
 
@@ -489,4 +498,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [⬆ Back to Top](#-carla-autonomous-driving---sac-reinforcement-learning)
 
 </div>
-
