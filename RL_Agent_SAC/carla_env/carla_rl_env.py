@@ -24,7 +24,7 @@ except ImportError:
     DATA_AUGMENTATION_AVAILABLE = False
     logging.warning("DataAugmentation not available")
 class ThreadedOperation:
-    
+
     @staticmethod
     def run(
         func: Any, timeout: float, description: str = "Operation", accept_timeout: bool = False
@@ -48,7 +48,7 @@ class ThreadedOperation:
                 return False, TimeoutError(f"{description} timed out after {timeout}s")
         return result["success"], result["error"]
 class CarlaRLEnv(gym.Env):
-    
+
     metadata = {"render_modes": ["human", "rgb_array"]}
     def __init__(self, config: Dict[str, Any], port: int = None, rank: int = 0):
         super().__init__()
@@ -284,7 +284,7 @@ class CarlaRLEnv(gym.Env):
             )
         self.world.set_weather(weather)
     def _spawn_traffic_manager(self):
-        
+
         self.actors = []
         if self.curriculum_enabled:
             v_range = self.curriculum_config.get("num_vehicles", [0, 10])
@@ -299,7 +299,7 @@ class CarlaRLEnv(gym.Env):
         if num_vehicles > 0 or num_pedestrians > 0:
             self._spawn_obstacles(num_vehicles, num_pedestrians, enable_traffic)
     def _spawn_obstacles(self, n_vehicles: int, n_walkers: int, enable_autopilot: bool):
-        
+
         import random
         spawn_points = self.world.get_map().get_spawn_points()
         random.shuffle(spawn_points)
@@ -396,7 +396,6 @@ class CarlaRLEnv(gym.Env):
                         logging.warning(f"Reconnection attempt failed: {reconnect_error}")
                 else:
                     logging.error(f"Error in _spawn_agent after {max_retries} retries: {e}", exc_info=True)
-                    return False
         return False
     def _reset_goal(self):
         
@@ -922,7 +921,7 @@ class CarlaRLEnv(gym.Env):
         except Exception as e:
             logging.warning(f"Error in _compute_safety_potential: {e}")
             return 0.0
-    
+
     def _compute_reward_safe(self) -> float:
         try:
             return self._compute_reward_impl()
@@ -973,7 +972,7 @@ class CarlaRLEnv(gym.Env):
         off_lane_threshold = self.reward_config.get("off_lane_threshold", tolerance * 3)
         if dist_center > off_lane_threshold:
             reward += self.reward_config.get("off_lane_penalty", -10.0)
-        
+
         # Safety Potential Function (MDPI Paper Approach)
         # Proactive risk assessment - penalize risky situations before collision occurs
         safety_potential_enabled = self.reward_config.get("safety_potential_enabled", True)
