@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# CARLA Binary Files (exclude from repository)
+CarlaUE4/
+Engine/
+Tools/
+HDMaps/
+Dockerfile
+LICENSE
+VERSION
+CHANGELOG
+ImportAssets.sh
+Manifest_DebugFiles_Linux.txt
+README
+CarlaUE4.sh
+restricted_carla_shell.sh
+push_to_github.sh
+
+# CARLA Assets
+*.uasset
+*.uexp
+*.ubulk
+*.umap
+*.uproject
+*.uplugin
+*.ini
+*.log
+*.pcd
+*.db
+*.db-shm
+*.db-wal
+
+# Checkpoints and logs
+checkpoints/
+logs/
+*.zip
+*.pt
+*.pth
+*.pkl
+*.json
+*.png
+*.jpg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.bak
+*.backup
