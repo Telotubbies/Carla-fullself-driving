@@ -1,0 +1,7 @@
+tunnel: b1b38db9-24be-4d6c-8973-23813d476ed8
+credentials-file: /home/a/.cloudflared/b1b38db9-24be-4d6c-8973-23813d476ed8.json
+
+ingress:
+  - hostname: flowtester.online
+    service: http://localhost:5000
+  - service: http_status:404

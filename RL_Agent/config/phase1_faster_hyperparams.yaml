@@ -1,0 +1,203 @@
+# Phase 1 Configuration: Faster Hyperparameters Only
+# Compatible with existing checkpoints (no architecture changes)
+# Use this if you want to speed up WITHOUT retraining from scratch
+
+# Environment Settings (SAME as improved)
+environment:
+  carla_host: "localhost"
+  carla_port: 2000
+  town: "Town01_Opt"
+  timeout: 20.0
+  
+  no_rendering_mode: true
+  
+  num_vehicles: 10
+  num_pedestrians: 5
+  enable_traffic: true
+  
+  domain_randomization:
+    enabled: true
+    weather_randomization: true
+    vehicle_randomization: true
+    spawn_randomization: true
+    
+    weather:
+      cloudiness_range: [0.0, 50.0]
+      precipitation_range: [0.0, 30.0]
+      sun_altitude_range: [15.0, 90.0]
+      fog_density_range: [0.0, 20.0]
+    
+    vehicle_blueprints:
+      - "vehicle.tesla.model3"
+      - "vehicle.audi.tt"
+      - "vehicle.mercedes.coupe"
+      - "vehicle.bmw.grandtourer"
+  
+  weather:
+    cloudiness: 0.0
+    precipitation: 0.0
+    sun_altitude_angle: 45.0
+  
+  vehicle:
+    blueprint: "vehicle.tesla.model3"
+    spawn_random: true
+
+# Sensor Configuration (SAME as improved - no changes)
+sensors:
+  rgb_camera:
+    enabled: true
+    width: 160  # SAME - no change
+    height: 90  # SAME - no change
+    fov: 110
+    location: [1.5, 0.0, 2.4]
+    rotation: [0.0, 0.0, 0.0]
+  
+  depth_camera:
+    enabled: true
+    width: 160  # SAME - no change
+    height: 90  # SAME - no change
+    fov: 110
+    location: [1.5, 0.0, 2.4]
+    rotation: [0.0, 0.0, 0.0]
+  
+  gps:
+    enabled: true
+    location: [1.0, 0.0, 2.8]
+  
+  sequence_length: 4
+
+# Observation Space (SAME as improved - no changes)
+observations:
+  image_size: [160, 90]  # SAME - no change
+  use_depth: true
+  normalize: true
+  stack_frames: 4
+  use_gps: true
+  use_goal: true
+
+# Action Space (SAME as improved - no changes)
+actions:
+  steering_range: [-1.0, 1.0]
+  throttle_range: [0.0, 1.0]
+  brake_range: [0.0, 1.0]
+  action_repeat: 4  # SAME - no change
+
+# Reward Function (same as improved)
+rewards:
+  lane_center_reward: 1.0
+  speed_reward: 0.5
+  smooth_steering_reward: 0.3
+  progress_reward: 2.0
+  obstacle_avoidance_reward: 1.0
+  lane_change_reward: 0.5
+  safe_stop_reward: 0.5
+  goal_distance_reward: 0.1
+  goal_reached_reward: 100.0
+  goal_reached_threshold: 5.0
+  collision_penalty: -50.0
+  off_lane_penalty: -10.0
+  jerk_penalty: -0.5
+  low_speed_penalty: -0.1
+  target_speed: 70.0
+  min_speed: 40.0
+  max_speed: 100.0
+  speed_tolerance: 5.0
+  lane_center_tolerance: 0.5
+  safe_distance: 10.0
+  critical_distance: 5.0
+  high_speed_penalty: 0.2
+
+# Training Configuration - FASTER HYPERPARAMETERS ONLY
+training:
+  algorithm: "PPO"
+  
+  # PPO Hyperparameters - OPTIMIZED FOR SPEED (compatible with existing checkpoints)
+  ppo:
+    learning_rate: 0.001
+    n_steps: 2048  # Reduced from 4096 (faster collection, ~2x)
+    batch_size: 256  # Reduced from 512 (faster training, ~1.5x)
+    n_epochs: 4  # Reduced from 5 (faster, ~1.2x)
+    gamma: 0.99
+    gae_lambda: 0.95
+    clip_range: 0.2
+    ent_coef: 0.01
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+  
+  total_timesteps: 500000
+  save_freq: 10000
+  eval_freq: 100000
+  eval_episodes: 3
+  
+  early_stopping:
+    enabled: false
+    patience: 1000000
+
+# Network Architecture (SAME as improved - no changes)
+network:
+  vision_encoder:
+    type: "ResNet"
+    resnet_type: "resnet18"  # SAME - no change
+    channels: [64, 128, 256, 512]
+    kernel_sizes: [8, 4, 3, 3]
+    strides: [4, 2, 2, 1]
+    activation: "relu"
+    use_batch_norm: true
+  
+  yolo:
+    enabled: false
+  
+  temporal:
+    type: "LSTM"
+    hidden_size: 512  # SAME - no change
+    num_layers: 3  # SAME - no change
+    dropout: 0.1
+  
+  policy:
+    hidden_sizes: [1024, 512, 256]  # SAME - no change
+    activation: "tanh"
+    use_layer_norm: true
+  
+  value:
+    hidden_sizes: [1024, 512, 256]  # SAME - no change
+    activation: "relu"
+    use_layer_norm: true
+
+# Logging & Monitoring - REDUCED for speed
+logging:
+  log_dir: "logs"
+  tensorboard: true
+  wandb: false
+  log_interval: 2000  # Increased from 1000 (less logging = faster)
+  verbose: 1
+
+# Evaluation Metrics
+evaluation:
+  metrics:
+    - "episode_reward"
+    - "episode_length"
+    - "collision_rate"
+    - "route_completion"
+    - "lane_keeping_accuracy"
+    - "speed_consistency"
+    - "smoothness"
+    - "infraction_rate"
+
+# Checkpointing
+checkpoints:
+  save_dir: "checkpoints"
+  save_best: true
+  keep_last_n: 5
+  use_sqlite: true
+  sqlite_db: "checkpoints/training_checkpoints.db"
+
+# Device Configuration
+device:
+  use_gpu: true
+  gpu_id: 0
+
+# Reproducibility
+seed: 42
+deterministic: false
+
+    

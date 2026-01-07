@@ -1,0 +1,236 @@
+# Reward-Optimized Configuration
+# 🎯 Focus: Improve reward learning and stability
+# Fixes: High KL divergence, negative rewards
+
+actions:
+  action_repeat: 4
+  brake_range: [0.0, 1.0]
+  steering_range: [-1.0, 1.0]
+  throttle_range: [0.0, 1.0]
+
+checkpoints:
+  clear_on_start: false
+  enabled: true
+  save_path: checkpoints_new
+  sqlite_db: checkpoints_new/training_checkpoints.db
+  use_sqlite: false
+
+environment:
+  carla_host: localhost
+  carla_port: 2000
+  curriculum_learning:
+    difficulty_increase_rate: 0.005
+    enable_traffic: false
+    enabled: true
+    initial_difficulty: 0.0
+    max_difficulty: 1.0
+    num_pedestrians: [0, 5]
+    num_vehicles: [0, 10]
+    reward_based: true
+    reward_threshold: 10.0
+    reward_window_size: 50
+  domain_randomization:
+    enabled: true
+    spawn_randomization: true
+    vehicle_blueprints:
+      - vehicle.tesla.model3
+      - vehicle.audi.tt
+      - vehicle.mercedes.coupe
+      - vehicle.bmw.grandtourer
+    vehicle_randomization: false
+    weather:
+      cloudiness_range: [0.0, 50.0]
+      fog_density_range: [0.0, 20.0]
+      precipitation_range: [0.0, 30.0]
+      sun_altitude_range: [15.0, 90.0]
+    weather_randomization: false
+  enable_traffic: false
+  no_rendering_mode: true
+  num_pedestrians: 0
+  num_vehicles: 0
+  timeout: 20.0
+  town: Town01_Opt
+  vehicle:
+    blueprint: vehicle.tesla.model3
+    spawn_random: true
+  weather:
+    cloudiness: 0.0
+    precipitation: 0.0
+    sun_altitude_angle: 45.0
+
+logging:
+  log_interval: 2000
+  tensorboard_log: logs/tensorboard
+  verbose: 1
+
+network:
+  policy:
+    activation: tanh
+    hidden_sizes: []
+  temporal:
+    hidden_size: 256
+    num_layers: 2
+    type: lstm
+  value:
+    activation: tanh
+    hidden_sizes: []
+  vision_encoder:
+    channels: [32, 64, 128, 256]
+    freeze_early_layers: false
+    output_size: 512
+    pretrained: true
+    resnet_type: resnet18
+    type: ResNet
+
+observations:
+  augmentation:
+    color_jitter_brightness: 0.2
+    color_jitter_contrast: 0.2
+    color_jitter_prob: 0.5
+    color_jitter_saturation: 0.2
+    enabled: true
+    gaussian_noise_prob: 0.3
+    gaussian_noise_std: 0.1
+    methods:
+      - color_jitter
+      - gaussian_noise
+      - motion_blur
+      - random_erasing
+    motion_blur_kernel: 5
+    motion_blur_prob: 0.3
+    random_erasing_area: 0.1
+    random_erasing_prob: 0.1
+  buffer_cache:
+    enabled: true
+    size: 32
+  edge_detection_method: multiscale_canny
+  image_size: [160, 90]
+  normalize: true
+  stack_frames: 4
+  use_depth: true
+  use_goal: true
+  use_gps: true
+  use_velocity: true
+  use_vision_waypoint: true
+  use_waypoint: true
+
+# 🎯 IMPROVED REWARD SHAPING - More forgiving, better learning signal
+rewards:
+  # Positive rewards (increased to encourage good behavior)
+  lane_center_reward: 5.0        # Increased from 3.0 - reward staying in lane
+  speed_reward: 2.0               # Increased from 1.5 - reward good speed
+  progress_reward: 6.0            # Increased from 4.0 - reward forward progress
+  smooth_steering_reward: 1.0     # Increased from 0.8 - reward smooth driving
+  goal_reached_reward: 500.0      # Increased from 200.0 - big reward for reaching goal
+  
+  # Penalties (reduced to be less harsh during learning)
+  collision_penalty: -20.0        # Reduced from -30.0 - less harsh
+  off_lane_penalty: -2.0          # Reduced from -5.0 - less harsh, allow exploration
+  low_speed_penalty: -0.02        # Reduced from -0.05 - less harsh
+  high_speed_penalty: 0.1         # Reduced from 0.2
+  jerk_penalty: -0.1              # Reduced from -0.3 - allow some exploration
+  
+  # Thresholds (more forgiving)
+  lane_center_tolerance: 1.0      # Increased from 0.5 - more forgiving
+  off_lane_threshold: 3.0         # Increased from 1.5 - only penalize if really off lane
+  
+  # Speed settings
+  target_speed: 70.0
+  min_speed: 30.0                 # Reduced from 40.0 - more forgiving
+  max_speed: 100.0
+  speed_tolerance: 10.0            # Increased from 5.0 - more forgiving
+  
+  # Goal settings
+  goal_distance_reward: 0.3       # Reduced from 0.5 - less negative for far goals
+  goal_reached_threshold: 10.0    # Increased from 5.0 - easier to reach
+  
+  # Other settings
+  critical_distance: 5.0
+  safe_distance: 10.0
+  obstacle_avoidance_reward: 2.0
+  lane_change_reward: 1.0
+  safe_stop_reward: 1.0
+  
+  # Progressive rewards (disabled for now - keep it simple)
+  progressive_rewards:
+    enabled: false
+    final_scale: 1.0
+    initial_scale: 1.0
+    scale_increase_rate: 0.0
+
+sensors:
+  depth_camera:
+    enabled: true
+    fov: 110
+    height: 90
+    location: [1.5, 0.0, 2.4]
+    rotation: [0.0, 0.0, 0.0]
+    width: 160
+  gps:
+    enabled: true
+    location: [1.0, 0.0, 2.8]
+  rgb_camera:
+    enabled: true
+    fov: 110
+    height: 90
+    location: [1.5, 0.0, 2.4]
+    rotation: [0.0, 0.0, 0.0]
+    width: 160
+  sequence_length: 4
+
+training:
+  algorithm: PPO
+  early_stopping:
+    enabled: false  # Disable for now - let it learn
+    min_reward: 50.0
+    patience: 100000
+  eval_episodes: 10
+  eval_freq: 50000
+  
+  # 🎯 STABILITY-FOCUSED HYPERPARAMETERS
+  # Fix: High KL divergence (262.7) and clip fraction (0.891)
+  ppo:
+    # Learning rate - REDUCED for stability
+    learning_rate: 0.0003        # Reduced from 0.0006 - slower, more stable learning
+    lr_schedule:
+      type: linear
+      initial_lr: 0.0003
+      final_lr: 0.00005          # Lower final LR for fine-tuning
+      total_steps: 500000
+    
+    # Update frequency - REDUCED to prevent policy from changing too fast
+    n_steps: 2048                # Keep same for sample efficiency
+    n_epochs: 4                  # Increased from 2 - more stable updates
+    batch_size: 256               # Keep same
+    
+    # PPO clipping - TIGHTER to prevent large policy changes
+    clip_range: 0.1              # Reduced from 0.2 - tighter clipping = less policy change
+    max_grad_norm: 0.5            # Keep same
+    
+    # Exploration - INCREASED to help agent explore
+    ent_coef: 0.05               # Increased from 0.02 - more exploration
+    
+    # Value function - INCREASED to improve value learning
+    vf_coef: 1.0                 # Increased from 0.5 - better value learning
+    
+    # GAE
+    gamma: 0.99
+    gae_lambda: 0.95
+  
+  # Features
+  prefetching:
+    enabled: true
+  prioritized_replay:
+    enabled: false
+  hindsight_replay:
+    enabled: false
+  
+  save_format: both
+  save_freq: 10000
+  total_timesteps: 500000
+
+# Device configuration
+device:
+  use_gpu: true
+  gpu_id: 0
+

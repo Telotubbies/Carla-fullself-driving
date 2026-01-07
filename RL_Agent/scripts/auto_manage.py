@@ -1,0 +1,1 @@
+training/auto_manage.py

@@ -1,0 +1,104 @@
+================================================================================
+LANE DETECTION ALGORITHM TEST REPORT
+================================================================================
+
+
+CANNY_ORIGINAL
+--------------------------------------------------------------------------------
+Edge Count: 192
+Edge Density: 0.0133
+Line Count: 4
+Left Lane Detected: False
+Right Lane Detected: True
+Both Lanes Detected: False
+Left Lane Points: 0
+Right Lane Points: 8
+
+
+CANNY_LOWER
+--------------------------------------------------------------------------------
+Edge Count: 192
+Edge Density: 0.0133
+Line Count: 4
+Left Lane Detected: False
+Right Lane Detected: True
+Both Lanes Detected: False
+Left Lane Points: 0
+Right Lane Points: 8
+
+
+CANNY_HIGHER
+--------------------------------------------------------------------------------
+Edge Count: 192
+Edge Density: 0.0133
+Line Count: 4
+Left Lane Detected: False
+Right Lane Detected: True
+Both Lanes Detected: False
+Left Lane Points: 0
+Right Lane Points: 8
+
+
+CANNY_ADAPTIVE
+--------------------------------------------------------------------------------
+Edge Count: 192
+Edge Density: 0.0133
+Line Count: 4
+Left Lane Detected: False
+Right Lane Detected: True
+Both Lanes Detected: False
+Left Lane Points: 0
+Right Lane Points: 8
+
+
+SOBEL
+--------------------------------------------------------------------------------
+Edge Count: 992
+Edge Density: 0.0689
+Line Count: 14
+Left Lane Detected: False
+Right Lane Detected: True
+Both Lanes Detected: False
+Left Lane Points: 0
+Right Lane Points: 24
+
+
+LAPLACIAN
+--------------------------------------------------------------------------------
+Edge Count: 1144
+Edge Density: 0.0794
+Line Count: 18
+Left Lane Detected: False
+Right Lane Detected: True
+Both Lanes Detected: False
+Left Lane Points: 0
+Right Lane Points: 32
+
+
+CANNY_MULTISCALE
+--------------------------------------------------------------------------------
+Edge Count: 552
+Edge Density: 0.0383
+Line Count: 6
+Left Lane Detected: True
+Right Lane Detected: True
+Both Lanes Detected: True
+Left Lane Points: 2
+Right Lane Points: 8
+
+
+CANNY_ENHANCED
+--------------------------------------------------------------------------------
+Edge Count: 188
+Edge Density: 0.0131
+Line Count: 4
+Left Lane Detected: False
+Right Lane Detected: True
+Both Lanes Detected: False
+Left Lane Points: 0
+Right Lane Points: 8
+
+
+================================================================================
+BEST ALGORITHM: canny_multiscale
+================================================================================

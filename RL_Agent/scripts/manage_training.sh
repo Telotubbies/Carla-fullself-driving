@@ -1,0 +1,1 @@
+training/manage_training.sh

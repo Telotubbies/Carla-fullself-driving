@@ -1,0 +1,178 @@
+# Phase 1 Configuration: Optimized for i5-13500 + 64GB RAM + RX 7800 XT
+# Higher performance settings for powerful hardware
+
+# Environment Settings
+environment:
+  carla_host: "localhost"
+  carla_port: 2000
+  town: "Town01_Opt"  # Minimal town - roads only, no buildings (lighter, faster)
+  timeout: 20.0  # seconds
+  
+  # No Rendering Mode: Set to true to reduce CARLA server load significantly
+  # - true: 2D topview mode, no 3D rendering (much lighter on GPU/CPU)
+  # - false: Full 3D rendering (higher quality but heavier load)
+  # Note: Vision-based RL still works with no_rendering_mode=True
+  #       because sensors (cameras) still render, only world rendering is disabled
+  no_rendering_mode: true  # Enable to reduce server load
+  
+  # Phase 1+: Multiple vehicles and obstacles
+  num_vehicles: 10  # Static/moving obstacles (other vehicles)
+  num_pedestrians: 5  # Pedestrian obstacles
+  enable_traffic: true  # Enable traffic manager for moving vehicles
+  
+  # Weather (clear for Phase 1)
+  weather:
+    cloudiness: 0.0
+    precipitation: 0.0
+    sun_altitude_angle: 45.0
+  
+  # Vehicle settings
+  vehicle:
+    blueprint: "vehicle.tesla.model3"  # Good default vehicle
+    spawn_random: true  # Random spawn points for diversity
+
+# Sensor Configuration
+sensors:
+  rgb_camera:
+    enabled: true
+    width: 160
+    height: 90
+    fov: 110
+    location: [1.5, 0.0, 2.4]  # Front of vehicle
+    rotation: [0.0, 0.0, 0.0]
+  
+  depth_camera:
+    enabled: true
+    width: 160
+    height: 90
+    fov: 110
+    location: [1.5, 0.0, 2.4]
+    rotation: [0.0, 0.0, 0.0]
+  
+  # Temporal sequence length
+  sequence_length: 4  # Number of frames for temporal reasoning
+
+# Observation Space
+observations:
+  image_size: [160, 90]  # Optimized for i5-13500 + 64GB RAM + 7800XT (increased from 128x72)
+  use_depth: true
+  normalize: true  # Normalize to [0, 1]
+  stack_frames: 4  # Increased from 3 for better temporal understanding
+
+# Action Space (Continuous)
+actions:
+  steering_range: [-1.0, 1.0]  # Full steering range
+  throttle_range: [0.0, 1.0]
+  brake_range: [0.0, 1.0]
+  action_repeat: 4  # Apply same action for N frames
+
+# Reward Function (Phase 1: Lane Keeping Focus)
+rewards:
+  # Positive rewards
+  lane_center_reward: 1.0      # Reward for staying in lane center
+  speed_reward: 0.5            # Reward for maintaining good speed
+  smooth_steering_reward: 0.3  # Reward for smooth steering
+  progress_reward: 2.0         # Reward for forward progress
+  
+  # Negative rewards (penalties)
+  collision_penalty: -50.0      # Heavy penalty for collision
+  off_lane_penalty: -10.0      # Penalty for leaving lane
+  jerk_penalty: -0.5           # Penalty for sudden movements
+  low_speed_penalty: -0.1       # Small penalty for being too slow
+  
+  # Reward shaping parameters
+  target_speed: 30.0           # km/h - ideal speed for Phase 1
+  speed_tolerance: 5.0         # km/h - acceptable speed range
+  lane_center_tolerance: 0.5   # meters - distance from lane center
+
+# Training Configuration
+training:
+  algorithm: "PPO"  # Proximal Policy Optimization
+  
+  # PPO Hyperparameters - Optimized for powerful hardware
+  ppo:
+    learning_rate: 0.0003  # 3e-4 as float
+    n_steps: 2048  # Increased from 1024 for better sample efficiency
+    batch_size: 64  # Increased from 32 for better GPU utilization
+    n_epochs: 10
+    gamma: 0.99
+    gae_lambda: 0.95
+    clip_range: 0.2
+    ent_coef: 0.01
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+  
+  # Training schedule
+  total_timesteps: 1000000  # 1M steps
+  save_freq: 50000           # Save checkpoint every N steps
+  eval_freq: 100000          # Evaluate every N steps
+  eval_episodes: 10          # Episodes for evaluation
+  
+  # Early stopping
+  early_stopping:
+    enabled: false
+    patience: 1000000
+
+# Network Architecture
+network:
+  # Vision Encoder
+  vision_encoder:
+    type: "ResNet"  # CNN or ResNet (ResNet recommended for better features)
+    resnet_type: "resnet18"  # "resnet18" (faster) or "resnet34" (better but slower)
+    channels: [32, 64, 128, 256]  # Conv channels
+    kernel_sizes: [8, 4, 3, 3]
+    strides: [4, 2, 2, 1]
+    activation: "relu"
+    use_batch_norm: true
+  
+  # YOLO Nano Object Detection
+  yolo:
+    enabled: false  # Temporarily disabled due to ROCm compatibility
+    model_path: null  # null = use default YOLOv8n
+    confidence_threshold: 0.5
+    feature_dim: 10  # Feature vector dimension from YOLO
+  
+  # Temporal Processing
+  temporal:
+    type: "LSTM"
+    hidden_size: 256
+    num_layers: 2
+    dropout: 0.1
+  
+  # Policy/Actor Network
+  policy:
+    hidden_sizes: [512, 256, 128]
+    activation: "tanh"
+    use_layer_norm: true
+  
+  # Value Network
+  value:
+    hidden_sizes: [512, 256, 128]
+    activation: "relu"
+    use_layer_norm: true
+
+# Logging & Monitoring
+logging:
+  log_dir: "logs"
+  tensorboard: true
+  wandb: false  # Set to true if using Weights & Biases
+  log_interval: 1000  # Log every N steps
+  verbose: 1
+
+# Checkpointing
+checkpoints:
+  save_dir: "checkpoints"
+  save_best: true
+  keep_last_n: 5  # Keep last N checkpoints
+
+# Device Configuration
+device:
+  use_gpu: true
+  gpu_id: 0
+  # AMD GPU: PyTorch will use HIP backend automatically if available
+
+# Reproducibility
+seed: 42
+deterministic: false  # Set to true for full reproducibility (slower)
+
+

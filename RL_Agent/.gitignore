@@ -1,0 +1,48 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Checkpoints and Models
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.zip
+
+# Logs
+logs/
+*.log
+tensorboard/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CARLA
+*.pyc
+*.pyo
+
+# YOLO models (downloaded automatically)
+*.pt
+yolov8*.pt
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+expert_demonstrations/*.npz

@@ -1,0 +1,1 @@
+monitoring/view_status_log.sh

@@ -1,0 +1,237 @@
+# Phase 1 Configuration: Improved with Research Insights
+# Based on "End-to-End Autonomous Driving in CARLA: A Survey"
+# Optimized for i5-13500 + 64GB RAM + RX 7800 XT
+
+# Environment Settings
+environment:
+  carla_host: "localhost"
+  carla_port: 2000
+  town: "Town01_Opt"  # Minimal town - roads only, no buildings (lighter, faster)
+  timeout: 20.0  # seconds
+  
+  # No Rendering Mode: Set to true to reduce CARLA server load significantly
+  no_rendering_mode: true  # Enable to reduce server load
+  
+  # Phase 1+: Multiple vehicles and obstacles
+  num_vehicles: 10  # Static/moving obstacles (other vehicles)
+  num_pedestrians: 5  # Pedestrian obstacles
+  enable_traffic: true  # Enable traffic manager for moving vehicles
+  
+  # Domain Randomization (Research Recommendation)
+  # Increases robustness and reduces sim-to-real gap
+  domain_randomization:
+    enabled: true
+    weather_randomization: true  # Randomize weather conditions
+    vehicle_randomization: true  # Randomize vehicle types
+    spawn_randomization: true    # Randomize spawn points
+    
+    # Weather randomization ranges
+    weather:
+      cloudiness_range: [0.0, 50.0]      # Random cloudiness
+      precipitation_range: [0.0, 30.0]  # Random rain
+      sun_altitude_range: [15.0, 90.0]   # Random sun position
+      fog_density_range: [0.0, 20.0]     # Random fog
+    
+    # Vehicle randomization
+    vehicle_blueprints:  # Random vehicle types
+      - "vehicle.tesla.model3"
+      - "vehicle.audi.tt"
+      - "vehicle.mercedes.coupe"
+      - "vehicle.bmw.grandtourer"
+  
+  # Weather (base settings, overridden by randomization if enabled)
+  weather:
+    cloudiness: 0.0
+    precipitation: 0.0
+    sun_altitude_angle: 45.0
+  
+  # Vehicle settings
+  vehicle:
+    blueprint: "vehicle.tesla.model3"  # Default, randomized if enabled
+    spawn_random: true  # Random spawn points for diversity
+
+# Sensor Configuration
+sensors:
+  rgb_camera:
+    enabled: true
+    width: 160
+    height: 90
+    fov: 110
+    location: [1.5, 0.0, 2.4]  # Front of vehicle
+    rotation: [0.0, 0.0, 0.0]
+  
+  depth_camera:
+    enabled: true
+    width: 160
+    height: 90
+    fov: 110
+    location: [1.5, 0.0, 2.4]
+    rotation: [0.0, 0.0, 0.0]
+  
+  # GPS Sensor for navigation
+  gps:
+    enabled: true
+    location: [1.0, 0.0, 2.8]  # On top of vehicle
+  
+  # Temporal sequence length
+  sequence_length: 4  # Number of frames for temporal reasoning
+
+# Observation Space
+observations:
+  image_size: [160, 90]  # Optimized for hardware
+  use_depth: true
+  normalize: true  # Normalize to [0, 1]
+  stack_frames: 4  # Temporal understanding
+  use_gps: true  # Enable GPS for navigation
+  use_goal: true  # Enable goal-based navigation
+
+# Action Space (Continuous)
+actions:
+  steering_range: [-1.0, 1.0]  # Full steering range
+  throttle_range: [0.0, 1.0]
+  brake_range: [0.0, 1.0]
+  action_repeat: 4  # Apply same action for N frames
+
+# Reward Function (Advanced: Lane Keeping + Obstacle Avoidance + Lane Change + Multi-Speed)
+# Research: Reward shaping is common but must be careful to avoid exploitation
+rewards:
+  # Positive rewards
+  lane_center_reward: 1.0      # Reward for staying in lane center
+  speed_reward: 0.5            # Reward for maintaining good speed (20-50 km/h range)
+  smooth_steering_reward: 0.3  # Reward for smooth steering
+  progress_reward: 2.0         # Reward for forward progress
+  
+  # Advanced rewards (NEW)
+  obstacle_avoidance_reward: 1.0  # Reward for maintaining safe distance from obstacles
+  lane_change_reward: 0.5         # Reward for successful lane changes
+  safe_stop_reward: 0.5           # Reward for stopping when obstacle cannot be avoided
+  
+  # Goal-based rewards (NEW - GPS Navigation)
+  goal_distance_reward: 0.1       # Reward for getting closer to goal (negative distance)
+  goal_reached_reward: 100.0      # Large reward when reaching goal
+  goal_reached_threshold: 5.0    # meters - distance to consider goal reached
+  
+  # Negative rewards (penalties)
+  collision_penalty: -50.0      # Heavy penalty for collision
+  off_lane_penalty: -10.0      # Penalty for leaving lane (reduced to allow lane changes)
+  jerk_penalty: -0.5           # Penalty for sudden movements
+  low_speed_penalty: -0.1       # Small penalty for being too slow
+  
+  # Reward shaping parameters
+  target_speed: 70.0           # km/h - reference speed (middle of 40-100 km/h range)
+  min_speed: 40.0              # km/h - minimum acceptable speed
+  max_speed: 100.0             # km/h - maximum acceptable speed
+  speed_tolerance: 5.0         # km/h - acceptable speed range (for reference)
+  lane_center_tolerance: 0.5   # meters - distance from lane center
+  safe_distance: 10.0           # meters - safe distance from obstacles
+  critical_distance: 5.0        # meters - critical distance (must stop if cannot avoid)
+  high_speed_penalty: 0.2       # Penalty for exceeding max_speed (> 100 km/h)
+
+# Training Configuration
+training:
+  algorithm: "PPO"  # Proximal Policy Optimization
+  
+  # PPO Hyperparameters - OPTIMIZED FOR SPEED (reduced to train faster)
+  ppo:
+    learning_rate: 0.001  # Increased for fastest learning (may need adjustment)
+    n_steps: 4096  # Reduced from 8192 to avoid GPU OOM with ResNet (ResNet uses more memory)
+    batch_size: 512  # Reduced from 1024 to avoid GPU OOM with ResNet (ResNet uses more memory)
+    n_epochs: 5  # Reduced from 10 to train faster (still good for learning)
+    gamma: 0.99  # Standard discount factor
+    gae_lambda: 0.95  # GAE lambda
+    clip_range: 0.2  # PPO clip range
+    ent_coef: 0.01  # Entropy coefficient (exploration)
+    vf_coef: 0.5  # Value function coefficient
+    max_grad_norm: 0.5  # Gradient clipping
+  
+  # Training schedule - Reduced for faster completion
+  total_timesteps: 500000  # 500K steps (~6-8 hours at current rate)
+  save_freq: 10000          # Save checkpoint every 10K steps
+  eval_freq: 100000          # Evaluate every N steps
+  eval_episodes: 3           # Episodes for evaluation
+  
+  # Early stopping
+  early_stopping:
+    enabled: false
+    patience: 1000000
+
+# Network Architecture
+network:
+  # Vision Encoder - Optimized for performance
+  vision_encoder:
+    type: "ResNet"  # CNN or ResNet (CNN faster, ResNet better feature extraction)
+    resnet_type: "resnet18"  # "resnet18" (faster) or "resnet34" (better but slower)
+    # CNN-specific parameters (used only if type="CNN")
+    channels: [64, 128, 256, 512]  # Increased channels for better representation
+    kernel_sizes: [8, 4, 3, 3]
+    strides: [4, 2, 2, 1]
+    activation: "relu"
+    use_batch_norm: true
+  
+  # YOLO Nano Object Detection - Disabled (using ResNet only)
+  # ResNet provides excellent visual features, no need for YOLO
+  yolo:
+    enabled: false  # Disabled: ResNet alone is sufficient
+    model_path: null  # null = use default YOLOv8n
+    confidence_threshold: 0.5
+    feature_dim: 10  # Feature vector: [num_objects, confidence, distance, class, density, ...]
+  
+  # Temporal Processing - Optimized for performance
+  temporal:
+    type: "LSTM"  # LSTM or Transformer (LSTM faster, Transformer better but slower)
+    hidden_size: 512  # Increased for better temporal understanding
+    num_layers: 3  # Increased for deeper temporal reasoning
+    dropout: 0.1
+  
+  # Policy/Actor Network - Optimized for performance
+  policy:
+    hidden_sizes: [1024, 512, 256]  # Increased for better policy representation
+    activation: "tanh"
+    use_layer_norm: true
+  
+  # Value Network - Optimized for performance
+  value:
+    hidden_sizes: [1024, 512, 256]  # Increased for better value estimation
+    activation: "relu"
+    use_layer_norm: true
+
+# Logging & Monitoring
+logging:
+  log_dir: "logs"
+  tensorboard: true
+  wandb: false  # Set to true if using Weights & Biases
+  log_interval: 1000  # Log every N steps
+  verbose: 1
+
+# Evaluation Metrics (Research Recommendations)
+evaluation:
+  # Comprehensive metrics from research
+  metrics:
+    - "episode_reward"      # Total reward per episode
+    - "episode_length"      # Steps per episode
+    - "collision_rate"      # Collision frequency
+    - "route_completion"    # Route completion percentage
+    - "lane_keeping_accuracy"  # Time spent in lane
+    - "speed_consistency"   # Speed variance
+    - "smoothness"          # Jerk (acceleration change)
+    - "infraction_rate"     # Traffic rule violations
+
+# Checkpointing
+checkpoints:
+  save_dir: "checkpoints"
+  save_best: true
+  keep_last_n: 5  # Keep last N checkpoints
+  use_sqlite: true  # Enable SQLite checkpointing for persistent storage
+  sqlite_db: "checkpoints/training_checkpoints.db"  # SQLite database path
+
+# Device Configuration
+device:
+  use_gpu: true  # Use GPU (PyTorch Nightly for ROCm 7.0 - tested and working)
+  gpu_id: 0
+  # AMD GPU: PyTorch will use HIP backend automatically if available
+
+# Reproducibility
+seed: 42
+deterministic: false  # Set to true for full reproducibility (slower)
+
+

@@ -1,0 +1,226 @@
+# Phase 1 Configuration: Optimized for SPEED
+# Faster training with minimal quality loss
+
+# Environment Settings
+environment:
+  carla_host: "localhost"
+  carla_port: 2000
+  town: "Town01_Opt"  # Minimal town - roads only, no buildings (lighter, faster)
+  timeout: 20.0  # seconds
+  
+  # No Rendering Mode: Set to true to reduce CARLA server load significantly
+  no_rendering_mode: true  # Enable to reduce server load
+  
+  # Reduced obstacles for faster simulation
+  num_vehicles: 5  # Reduced from 10 (faster)
+  num_pedestrians: 2  # Reduced from 5 (faster)
+  enable_traffic: true  # Enable traffic manager for moving vehicles
+  
+  # Domain Randomization - REDUCED for speed
+  domain_randomization:
+    enabled: true
+    weather_randomization: false  # Disabled for speed
+    vehicle_randomization: true  # Keep for diversity
+    spawn_randomization: true    # Keep for diversity
+    
+    # Weather randomization ranges (not used if weather_randomization=false)
+    weather:
+      cloudiness_range: [0.0, 50.0]
+      precipitation_range: [0.0, 30.0]
+      sun_altitude_range: [15.0, 90.0]
+      fog_density_range: [0.0, 20.0]
+    
+    # Vehicle randomization
+    vehicle_blueprints:
+      - "vehicle.tesla.model3"
+      - "vehicle.audi.tt"
+      - "vehicle.mercedes.coupe"
+      - "vehicle.bmw.grandtourer"
+  
+  # Weather (base settings)
+  weather:
+    cloudiness: 0.0
+    precipitation: 0.0
+    sun_altitude_angle: 45.0
+  
+  # Vehicle settings
+  vehicle:
+    blueprint: "vehicle.tesla.model3"
+    spawn_random: true
+
+# Sensor Configuration - OPTIMIZED FOR SPEED
+sensors:
+  rgb_camera:
+    enabled: true
+    width: 128  # Reduced from 160 (faster)
+    height: 72  # Reduced from 90 (faster)
+    fov: 110
+    location: [1.5, 0.0, 2.4]
+    rotation: [0.0, 0.0, 0.0]
+  
+  depth_camera:
+    enabled: true
+    width: 128  # Reduced from 160 (faster)
+    height: 72  # Reduced from 90 (faster)
+    fov: 110
+    location: [1.5, 0.0, 2.4]
+    rotation: [0.0, 0.0, 0.0]
+  
+  # GPS Sensor for navigation
+  gps:
+    enabled: true
+    location: [1.0, 0.0, 2.8]
+  
+  # Temporal sequence length
+  sequence_length: 4
+
+# Observation Space - OPTIMIZED FOR SPEED
+observations:
+  image_size: [128, 72]  # Reduced from [160, 90] (faster)
+  use_depth: true
+  normalize: true
+  stack_frames: 4
+  use_gps: true
+  use_goal: true
+
+# Action Space (Continuous) - OPTIMIZED FOR SPEED
+actions:
+  steering_range: [-1.0, 1.0]
+  throttle_range: [0.0, 1.0]
+  brake_range: [0.0, 1.0]
+  action_repeat: 2  # Reduced from 4 (faster, ~2x speed)
+
+# Reward Function (same as improved)
+rewards:
+  # Positive rewards
+  lane_center_reward: 1.0
+  speed_reward: 0.5
+  smooth_steering_reward: 0.3
+  progress_reward: 2.0
+  
+  # Advanced rewards
+  obstacle_avoidance_reward: 1.0
+  lane_change_reward: 0.5
+  safe_stop_reward: 0.5
+  
+  # Goal-based rewards
+  goal_distance_reward: 0.1
+  goal_reached_reward: 100.0
+  goal_reached_threshold: 5.0
+  
+  # Negative rewards (penalties)
+  collision_penalty: -50.0
+  off_lane_penalty: -10.0
+  jerk_penalty: -0.5
+  low_speed_penalty: -0.1
+  
+  # Reward shaping parameters
+  target_speed: 70.0
+  min_speed: 40.0
+  max_speed: 100.0
+  speed_tolerance: 5.0
+  lane_center_tolerance: 0.5
+  safe_distance: 10.0
+  critical_distance: 5.0
+  high_speed_penalty: 0.2
+
+# Training Configuration - OPTIMIZED FOR SPEED
+training:
+  algorithm: "PPO"
+  
+  # PPO Hyperparameters - OPTIMIZED FOR MAXIMUM SPEED
+  ppo:
+    learning_rate: 0.001
+    n_steps: 2048  # Reduced from 4096 (faster collection)
+    batch_size: 256  # Reduced from 512 (faster training)
+    n_epochs: 4  # Reduced from 5 (faster)
+    gamma: 0.99
+    gae_lambda: 0.95
+    clip_range: 0.2
+    ent_coef: 0.01
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+  
+  # Training schedule
+  total_timesteps: 500000
+  save_freq: 10000
+  eval_freq: 100000
+  eval_episodes: 3
+  
+  # Early stopping
+  early_stopping:
+    enabled: false
+    patience: 1000000
+
+# Network Architecture - OPTIMIZED FOR SPEED
+network:
+  # Vision Encoder - Faster option
+  vision_encoder:
+    type: "ResNet"
+    resnet_type: "resnet18"  # Keep resnet18 (faster than resnet34)
+    channels: [64, 128, 256, 512]
+    kernel_sizes: [8, 4, 3, 3]
+    strides: [4, 2, 2, 1]
+    activation: "relu"
+    use_batch_norm: true
+  
+  # YOLO - Disabled
+  yolo:
+    enabled: false
+  
+  # Temporal Processing - Reduced for speed
+  temporal:
+    type: "LSTM"
+    hidden_size: 256  # Reduced from 512 (faster)
+    num_layers: 2  # Reduced from 3 (faster)
+    dropout: 0.1
+  
+  # Policy/Actor Network - Reduced for speed
+  policy:
+    hidden_sizes: [512, 256]  # Reduced from [1024, 512, 256] (faster)
+    activation: "tanh"
+    use_layer_norm: true
+  
+  # Value Network - Reduced for speed
+  value:
+    hidden_sizes: [512, 256]  # Reduced from [1024, 512, 256] (faster)
+    activation: "relu"
+    use_layer_norm: true
+
+# Logging & Monitoring - REDUCED for speed
+logging:
+  log_dir: "logs"
+  tensorboard: true
+  wandb: false
+  log_interval: 2000  # Increased from 1000 (less logging = faster)
+  verbose: 1
+
+# Evaluation Metrics
+evaluation:
+  metrics:
+    - "episode_reward"
+    - "episode_length"
+    - "collision_rate"
+    - "route_completion"
+    - "lane_keeping_accuracy"
+    - "speed_consistency"
+    - "smoothness"
+    - "infraction_rate"
+
+# Checkpointing
+checkpoints:
+  save_dir: "checkpoints"
+  save_best: true
+  keep_last_n: 5
+  use_sqlite: true
+  sqlite_db: "checkpoints/training_checkpoints.db"
+
+# Device Configuration
+device:
+  use_gpu: true
+  gpu_id: 0
+
+# Reproducibility
+seed: 42
+deterministic: false
+
