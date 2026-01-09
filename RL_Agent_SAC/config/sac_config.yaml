@@ -9,12 +9,16 @@ actions:
   throttle_range: [0.0, 1.0]
 
 checkpoints:
-  clear_on_start: false
+  clear_on_start: true  # Clear database on start for fresh training
   enabled: true
   save_path: checkpoints
   save_freq: 1000  # Save checkpoint every 1k steps
   sqlite_db: checkpoints/training_checkpoints.db
   use_sqlite: true
+  # Automatic cleanup to prevent disk full
+  max_checkpoints_to_keep: 1  # Keep only latest 1 checkpoint (current only)
+  cleanup_old_checkpoints: true  # Enable automatic cleanup
+  max_checkpoint_size_mb: 500  # Skip saving if checkpoint > 500MB (likely corrupted)
 
 environment:
   carla_host: localhost
@@ -33,22 +37,48 @@ environment:
   domain_randomization:
     enabled: true
     spawn_randomization: true
+    # Multiple vehicle types for generalization
     vehicle_blueprints:
       - vehicle.tesla.model3
       - vehicle.audi.tt
       - vehicle.mercedes.coupe
       - vehicle.bmw.grandtourer
-    vehicle_randomization: false
+      - vehicle.carlacola.carlacola
+      - vehicle.chevrolet.impala
+      - vehicle.dodge.charger_police
+      - vehicle.ford.mustang
+      - vehicle.jeep.wrangler_rubicon
+      - vehicle.lincoln.mkz_2017
+      - vehicle.nissan.patrol
+      - vehicle.seat.leon
+      - vehicle.toyota.prius
+    vehicle_randomization: false  # Use same vehicle spec for consistent training
+    vehicle_attributes:
+      # Randomize vehicle physics for robustness
+      mass_range: [1200.0, 2500.0]  # kg
+      wheel_friction_range: [0.6, 1.2]
+      engine_power_range: [100.0, 300.0]  # kW
+      max_rpm_range: [3000.0, 7000.0]
+      damping_rate_range: [0.1, 0.5]
+    # Multiple towns for diverse environments
+    town_randomization: true
+    towns:
+      - Town01_Opt
+      - Town02
+      - Town03
+      - Town04
+      - Town05
     weather:
-      cloudiness_range: [0.0, 50.0]
-      fog_density_range: [0.0, 20.0]
-      precipitation_range: [0.0, 30.0]
-      sun_altitude_range: [15.0, 90.0]
-    weather_randomization: false
-  enable_traffic: false
+      cloudiness_range: [0.0, 80.0]
+      fog_density_range: [0.0, 50.0]
+      precipitation_range: [0.0, 80.0]
+      sun_altitude_range: [0.0, 90.0]  # Full day cycle
+      wetness_range: [0.0, 100.0]
+    weather_randomization: true  # Enable weather randomization for robustness
+  enable_traffic: true  # Enable traffic for obstacle avoidance training
   no_rendering_mode: true
-  num_pedestrians: 0
-  num_vehicles: 0
+  num_pedestrians: 10  # Add pedestrians for obstacle avoidance
+  num_vehicles: 15     # Add vehicles for obstacle avoidance
   timeout: 20.0
   town: Town01_Opt
   vehicle:
@@ -117,19 +147,19 @@ observations:
 
 # 🎯 REWARD SHAPING - Optimized for SAC learning
 rewards:
-  # Positive rewards (normalized to prevent reward scaling with episode length)
-  lane_center_reward: 5.0
-  speed_reward: 2.0
-  progress_reward: 2.0  # Reduced from 6.0, now normalized per step
-  smooth_steering_reward: 1.0
+  # Positive rewards (increased to encourage faster learning)
+  lane_center_reward: 8.0      # Increased from 5.0
+  speed_reward: 3.0            # Increased from 2.0
+  progress_reward: 4.0         # Increased from 2.0 to encourage longer episodes
+  smooth_steering_reward: 2.0  # Increased from 1.0
   goal_reached_reward: 500.0
   
-  # Penalties (reduced to be less harsh during learning)
-  collision_penalty: -20.0
-  off_lane_penalty: -2.0
-  low_speed_penalty: -0.02
+  # Penalties (adjusted to be less harsh but still effective)
+  collision_penalty: -15.0     # Reduced from -20.0 to be less harsh
+  off_lane_penalty: -1.5       # Reduced from -2.0
+  low_speed_penalty: -0.01     # Reduced from -0.02
   high_speed_penalty: 0.1
-  jerk_penalty: -0.1
+  jerk_penalty: -0.05          # Reduced from -0.1
   
   # Thresholds (more forgiving)
   lane_center_tolerance: 1.0
@@ -148,7 +178,10 @@ rewards:
   # Other settings
   critical_distance: 5.0
   safe_distance: 10.0
-  obstacle_avoidance_reward: 2.0
+  obstacle_avoidance_reward: 3.0  # Reward for braking when obstacle detected
+  safe_distance_reward: 1.0       # Reward for maintaining safe distance
+  unsafe_distance_penalty: -5.0  # Penalty for being too close to obstacles
+  obstacle_approach_penalty: -3.0 # Penalty for accelerating toward obstacles
   lane_change_reward: 1.0
   safe_stop_reward: 1.0
   
@@ -190,30 +223,31 @@ training:
   
   # 🎯 SAC-SPECIFIC HYPERPARAMETERS
   # SAC is off-policy, so it can learn from old experiences
+  # Optimized for vision-based autonomous driving
   sac:
-    # Learning rate - Lower than PPO for stability
-    learning_rate: 0.0003
+    # Learning rate - Balanced for vision-based RL (not too high to avoid instability)
+    learning_rate: 0.0003      # Standard for vision-based RL (stable learning)
     lr_schedule:
       type: linear
-      initial_lr: 0.0003
-      final_lr: 0.00005
+      initial_lr: 0.0003       # Start with standard LR
+      final_lr: 0.00005        # Decay to lower LR for fine-tuning
       total_steps: 500000
     
     # Replay buffer - Large buffer for off-policy learning
-    buffer_size: 100000        # Large buffer to store diverse experiences
-    learning_starts: 1000      # Collect experiences before training starts
-    batch_size: 256            # Batch size for training
+    buffer_size: 250000        # Large buffer to store diverse experiences
+    learning_starts: 2000      # Collect diverse experiences before training starts
+    batch_size: 256            # Batch size for training (good for vision)
     
-    # Soft update (target network)
-    tau: 0.005                 # Soft update coefficient (lower = slower target update)
-    target_update_interval: 1  # Update target network every N gradient steps
+    # Soft update (target network) - Balanced for stability
+    tau: 0.005                 # Standard value for stable target network updates
+    target_update_interval: 1  # Update target network every gradient step
     
     # Discount factor
-    gamma: 0.99
+    gamma: 0.99                # Standard for long-horizon tasks
     
-    # Training frequency
-    train_freq: 4              # Train every N steps (increased from 1 for better performance)
-    gradient_steps: 4          # Number of gradient steps per training update (increased from 1 for better performance)
+    # Training frequency - Balanced for stability and efficiency
+    train_freq: 4              # Train every 4 steps (balanced: not too frequent, not too sparse)
+    gradient_steps: 1          # 1 gradient step per update (standard, prevents overfitting)
     
     # Entropy coefficient (automatic tuning)
     ent_coef: 'auto'           # 'auto' for automatic entropy tuning

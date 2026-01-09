@@ -14,6 +14,7 @@ import re
 import socket
 import urllib.request
 import json
+
 BASE_DIR = Path("/home/a/Desktop/CARLA_0.9.16/RL_Agent_SAC")
 CARLA_DIR = Path("/home/a/Desktop/CARLA_0.9.16")
 LOG_DIR = BASE_DIR / "logs"
@@ -42,6 +43,16 @@ console.setLevel(logging.INFO)
 formatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 console.setFormatter(formatter)
 logger.addHandler(console)
+
+# Import auto cleanup manager
+try:
+    sys.path.insert(0, str(BASE_DIR))
+    from utils.auto_cleanup import AutoCleanupManager
+    CLEANUP_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Auto cleanup not available: {e}")
+    CLEANUP_AVAILABLE = False
+
 def find_processes(pattern: str) -> list[psutil.Process]:
     
     matches = []
@@ -426,8 +437,41 @@ def monitor_loop():
     last_step = {}
     last_check_time = {}
     last_restart_time = 0
+    last_cleanup_time = 0
+    CLEANUP_INTERVAL = 3600  # Run cleanup every hour
+    
+    # Initialize cleanup manager
+    cleanup_manager = None
+    if CLEANUP_AVAILABLE:
+        try:
+            cleanup_manager = AutoCleanupManager(
+                base_dir=BASE_DIR,
+                min_free_space_gb=10.0,
+                keep_latest_logs=3,
+                keep_latest_checkpoints=1,
+                log_retention_days=3,
+                checkpoint_retention_days=7,
+                cleanup_interval_hours=6
+            )
+            logger.info("✅ Auto cleanup manager initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize cleanup manager: {e}")
+    
     try:
         while True:
+            # Periodic cleanup check
+            if cleanup_manager:
+                time_since_cleanup = time.time() - last_cleanup_time
+                if time_since_cleanup >= CLEANUP_INTERVAL or cleanup_manager.needs_cleanup():
+                    try:
+                        logger.info("🧹 Running automatic disk cleanup...")
+                        result = cleanup_manager.run_cleanup(force=False)
+                        if result.get('cleaned'):
+                            logger.info(f"✅ Cleanup completed: freed {result['freed_space_gb']:.2f} GB")
+                        last_cleanup_time = time.time()
+                    except Exception as e:
+                        logger.error(f"Cleanup failed: {e}", exc_info=True)
+            
             carla_ok = check_carla_status()
             training_healthy, should_restart, reason = check_training_health(last_step, last_check_time)
             dashboard_ok = check_dashboard_status()
@@ -475,17 +519,37 @@ if __name__ == "__main__":
     else:
         auto_manage_procs = find_processes("auto_manage.py")
         running_healthy = False
+        current_pid = os.getpid()
         for proc in auto_manage_procs:
             try:
                 if "RL_Agent_SAC" in ' '.join(proc.cmdline() or []):
+                    # Skip self
+                    if proc.pid == current_pid:
+                        continue
                     try:
                         proc_status = proc.status()
                         proc_memory = proc.memory_info().rss / 1024 / 1024
-                        if proc_status in ['running', 'sleeping'] and proc_memory > 1:
-                            running_healthy = True
-                            logger.info(f"Found healthy auto_manage process PID {proc.pid}, keeping it")
-                            print("Auto_manage is already running and healthy. Skipping restart.")
-                            break
+                        # Check if process is actually running monitor_loop (has "run" argument)
+                        cmdline_str = ' '.join(proc.cmdline() or [])
+                        is_monitor_loop = 'run' in cmdline_str or 'monitor_loop' in cmdline_str
+                        # Only consider healthy if it's actually running the monitor loop
+                        if proc_status in ['running', 'sleeping'] and proc_memory > 1 and is_monitor_loop:
+                            # Double check: verify it's actually doing work (check log activity)
+                            try:
+                                log_mtime = os.path.getmtime(AUTO_LOG_FILE) if AUTO_LOG_FILE.exists() else 0
+                                time_since_log = time.time() - log_mtime
+                                # If log hasn't been updated in last 5 minutes, process might be stuck
+                                if time_since_log < 300:
+                                    running_healthy = True
+                                    logger.info(f"Found healthy auto_manage process PID {proc.pid}, keeping it")
+                                    print("Auto_manage is already running and healthy. Skipping restart.")
+                                    break
+                                else:
+                                    logger.warning(f"Found auto_manage process PID {proc.pid} but log stale ({time_since_log:.0f}s), will restart")
+                            except:
+                                running_healthy = True
+                                logger.info(f"Found healthy auto_manage process PID {proc.pid}, keeping it")
+                                break
                     except:
                         pass
             except (psutil.NoSuchProcess, psutil.AccessDenied):
