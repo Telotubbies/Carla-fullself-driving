@@ -51,8 +51,21 @@ function ProjectOverview() {
                       Observation Space
                     </Typography>
                     <Typography variant="body1">
-                      Vision-based (RGB images) + GPS + Velocity + Distance to Goal
+                      Vision (RGB+Depth) + GPS + Goal + Waypoint + Velocity
                     </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      All normalized: GPS/Goal [-1,1], Distance [0,1]
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Training Strategy
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                      <Chip label="Curriculum Learning" color="success" size="small" />
+                      <Chip label="Data Validation" color="info" size="small" />
+                      <Chip label="Reward Optimization" color="warning" size="small" />
+                    </Box>
                   </Box>
                 </Box>
               </CardContent>
@@ -183,9 +196,12 @@ function ProjectOverview() {
                       <Chip label="SAC Algorithm" color="primary" />
                       <Chip label="ResNet-18 Vision Encoder" color="primary" />
                       <Chip label="LSTM Temporal Encoder" color="primary" />
-                      <Chip label="Replay Buffer" color="primary" />
-                      <Chip label="Checkpoint Manager" color="primary" />
-                      <Chip label="Web Dashboard" color="primary" />
+                      <Chip label="Replay Buffer (250K)" color="primary" />
+                      <Chip label="Data Preprocessing" color="success" />
+                      <Chip label="Curriculum Learning" color="success" />
+                      <Chip label="Checkpoint Compression" color="info" />
+                      <Chip label="Auto-Cleanup System" color="info" />
+                      <Chip label="Production Dashboard" color="warning" />
                     </Box>
                   </Box>
                   <Box>
@@ -194,22 +210,54 @@ function ProjectOverview() {
                     </Typography>
                     <Box component="ul" sx={{ pl: 3, mt: 1 }}>
                       <li>
-                        <Typography variant="body2">ResNet-18 pretrained on ImageNet for vision encoding</Typography>
+                        <Typography variant="body2">
+                          <strong>ResNet-18</strong> pretrained on ImageNet for vision encoding
+                        </Typography>
                       </li>
                       <li>
-                        <Typography variant="body2">Vision-based lane detection (multiscale Canny)</Typography>
+                        <Typography variant="body2">
+                          <strong>Data Preprocessing:</strong> GPS/Goal normalization, data validation, outlier detection
+                        </Typography>
                       </li>
                       <li>
-                        <Typography variant="body2">Data augmentation (color jitter, noise, blur, erasing)</Typography>
+                        <Typography variant="body2">
+                          <strong>Data Augmentation:</strong> Color jitter, Gaussian noise, motion blur, random erasing
+                        </Typography>
                       </li>
                       <li>
-                        <Typography variant="body2">Mixed device training (GPU/CPU)</Typography>
+                        <Typography variant="body2">
+                          <strong>Curriculum Learning:</strong> Gradual difficulty increase (0.0 → 1.0) based on performance
+                        </Typography>
                       </li>
                       <li>
-                        <Typography variant="body2">SQLite checkpoint management</Typography>
+                        <Typography variant="body2">
+                          <strong>Reward Optimization:</strong> Optimized reward function with 60s episode timeout
+                        </Typography>
                       </li>
                       <li>
-                        <Typography variant="body2">Real-time monitoring dashboard</Typography>
+                        <Typography variant="body2">
+                          <strong>Checkpoint Compression:</strong> Automatic ZIP_DEFLATED compression (~58% reduction)
+                        </Typography>
+                      </li>
+                      <li>
+                        <Typography variant="body2">
+                          <strong>Auto-Cleanup:</strong> Automatic disk space management for logs and checkpoints
+                        </Typography>
+                      </li>
+                      <li>
+                        <Typography variant="body2">
+                          <strong>Mixed Device Training:</strong> GPU/CPU load balancing to prevent OOM
+                        </Typography>
+                      </li>
+                      <li>
+                        <Typography variant="body2">
+                          <strong>SQLite Checkpointing:</strong> Efficient model storage with metadata
+                        </Typography>
+                      </li>
+                      <li>
+                        <Typography variant="body2">
+                          <strong>Production Dashboard:</strong> FastAPI backend with real-time monitoring
+                        </Typography>
                       </li>
                     </Box>
                   </Box>

@@ -113,7 +113,7 @@ function WorkflowDiagram() {
                         CARLA Environment
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Generates RGB images, GPS, velocity, distance to goal
+                        Generates RGB+Depth images, GPS, velocity, goal, waypoints
                       </Typography>
                     </Box>
                   </Box>
@@ -136,10 +136,10 @@ function WorkflowDiagram() {
                     </Box>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="subtitle2" fontWeight={600}>
-                        Data Augmentation
+                        Data Preprocessing & Normalization
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Apply color jitter, noise, blur, random erasing to images
+                        Normalize GPS/Goal to [-1,1], Distance to [0,1], validate data quality
                       </Typography>
                     </Box>
                   </Box>
@@ -162,10 +162,10 @@ function WorkflowDiagram() {
                     </Box>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="subtitle2" fontWeight={600}>
-                        Vision Policy Network
+                        Data Augmentation
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        CNN processes images → Outputs action (steering, throttle, brake)
+                        Apply color jitter, Gaussian noise, motion blur, random erasing
                       </Typography>
                     </Box>
                   </Box>
@@ -188,20 +188,46 @@ function WorkflowDiagram() {
                     </Box>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="subtitle2" fontWeight={600}>
-                        Replay Buffer
+                        Vision Policy Network (ResNet-18 + LSTM)
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Stores experiences for off-policy learning
+                        ResNet-18 processes images → LSTM handles temporal → Outputs action (steering, throttle, brake)
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ pl: 6, color: 'info.main' }}>↓</Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        bgcolor: 'info.main',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                      }}
+                    >
+                      5
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        Replay Buffer (250K transitions)
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Stores validated experiences for off-policy learning (SAC)
                       </Typography>
                     </Box>
                   </Box>
                 </Box>
               </Box>
 
-              {/* Checkpoint System */}
+              {/* Curriculum Learning */}
               <Box>
                 <Typography variant="h6" gutterBottom fontWeight={700} color="primary">
-                  3. Checkpoint System
+                  3. Curriculum Learning & Reward Optimization
                 </Typography>
                 <Box
                   sx={{
@@ -217,10 +243,66 @@ function WorkflowDiagram() {
                 >
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                      Regular Checkpoints
+                      Gradual Difficulty
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Saved every 1000 steps (ZIP format)
+                      Start easy (difficulty 0.0) → Gradually increase to 1.0
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      No obstacles → Add pedestrians → Add vehicles → Full traffic
+                    </Typography>
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      Reward-Based Progression
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Increase difficulty faster when performing well (avg reward > 200)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Adaptive based on last 50 episodes
+                    </Typography>
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      Optimized Rewards
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Episode timeout: 60s, increased positive rewards, reduced penalties
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Better learning signal for stable training
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Checkpoint System */}
+              <Box>
+                <Typography variant="h6" gutterBottom fontWeight={700} color="primary">
+                  4. Checkpoint System
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    mt: 2,
+                    p: 2,
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    border: '2px solid',
+                    borderColor: 'success.main',
+                  }}
+                >
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      Automatic Compression
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      ZIP_DEFLATED compression (~58% size reduction)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Every 2000 steps, auto-compressed
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1 }}>
@@ -228,15 +310,21 @@ function WorkflowDiagram() {
                       SQLite Checkpoints
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Compressed model stored in database
+                      Compressed model with metadata stored in database
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Efficient storage, fast resume
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                      Enhanced Checkpoints
+                      Auto-Cleanup
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Full training state with metadata
+                      Automatic disk space management
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Keeps only latest checkpoint, cleans old logs
                     </Typography>
                   </Box>
                 </Box>
@@ -245,7 +333,7 @@ function WorkflowDiagram() {
               {/* Monitoring */}
               <Box>
                 <Typography variant="h6" gutterBottom fontWeight={700} color="primary">
-                  4. Monitoring & Dashboard
+                  5. Monitoring & Dashboard
                 </Typography>
                 <Box
                   sx={{
@@ -261,10 +349,13 @@ function WorkflowDiagram() {
                 >
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                      Real-time Metrics
+                      Production Dashboard
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Training progress, rewards, system resources
+                      FastAPI backend with auto-refresh (every 1 min)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Real-time metrics, system resources, CPU temp
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1 }}>
@@ -272,15 +363,65 @@ function WorkflowDiagram() {
                       Logs Viewer
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      System logs and training logs with auto-refresh
+                      System logs and training logs with auto-refresh (every 2s)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Real-time log streaming
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                      History Charts
+                      Training Charts
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Reward trends and training statistics
+                      Reward trends, episode statistics, curriculum progress
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      Auto-update every 2 seconds
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Auto-Management */}
+              <Box>
+                <Typography variant="h6" gutterBottom fontWeight={700} color="primary">
+                  6. Auto-Management System
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    mt: 2,
+                    p: 2,
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    border: '2px solid',
+                    borderColor: 'error.main',
+                  }}
+                >
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      Process Monitoring
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Health checks every 30s for CARLA, training, dashboard
+                    </Typography>
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      Automatic Restart
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Auto-restart on failures, stuck detection (30min threshold)
+                    </Typography>
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      Disk Space Management
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Automatic cleanup every 6 hours or when disk < 10GB free
                     </Typography>
                   </Box>
                 </Box>
