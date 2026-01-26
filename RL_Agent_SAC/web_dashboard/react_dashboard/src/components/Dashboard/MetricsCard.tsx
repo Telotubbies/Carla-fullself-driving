@@ -17,6 +17,8 @@ function MetricsCard({ metrics }: MetricsCardProps) {
   const { data: history } = useQuery({
     queryKey: ['metrics-history'],
     queryFn: api.getMetricsHistory,
+    refetchInterval: 60000, // Auto-refresh every 1 minute
+    staleTime: 30000, // Consider data stale after 30 seconds
   });
 
   const stats = useMemo(() => {

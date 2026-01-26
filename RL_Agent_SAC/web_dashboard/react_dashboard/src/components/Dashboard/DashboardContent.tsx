@@ -13,6 +13,9 @@ function DashboardContent() {
   const { data: status, isLoading } = useQuery({
     queryKey: ['status'],
     queryFn: api.getStatus,
+    refetchInterval: 60000, // Auto-refresh every 1 minute (60000ms)
+    staleTime: 30000, // Consider data stale after 30 seconds
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 
   if (isLoading || !status) {
