@@ -27,7 +27,7 @@ function DashboardContent() {
   }
 
   return (
-    <DashboardLayout isRunning={status.status.running}>
+    <DashboardLayout isRunning={status?.status?.running ?? false}>
       <Box
         sx={{
           display: 'grid',

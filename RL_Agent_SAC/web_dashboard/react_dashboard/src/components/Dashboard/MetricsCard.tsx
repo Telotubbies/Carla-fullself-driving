@@ -33,7 +33,20 @@ function MetricsCard({ metrics }: MetricsCardProps) {
       };
     }
 
-    const rewards = history.map((h) => h.reward).filter((r) => r != null);
+    const rewards = history.map((h) => h.reward).filter((r) => r != null && isFinite(r));
+    
+    // Fix: Check if rewards array is empty before calculations
+    if (rewards.length === 0) {
+      return {
+        totalEpisodes: history.length,
+        bestReward: 0,
+        worstReward: 0,
+        avgReward: 0,
+        recentAvgReward: 0,
+        avgEpisodeLength: metrics.episode_length || 0,
+      };
+    }
+
     const recentRewards = rewards.slice(-10); // Last 10 episodes
 
     return {

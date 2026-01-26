@@ -363,16 +363,18 @@ async def api_status(request: Request):
                     gpu_memory_used = float(gpu_data.get('memory_used_mb', 0)) / 1024.0
                 elif gpu_data.get('memory_used') is not None:
                     gpu_memory_used = float(gpu_data.get('memory_used', 0))
-                    if gpu_memory_used < 0.1:  # If < 0.1 GB, might be in MB
-                        gpu_memory_used = gpu_memory_used * 1024.0 / 1024.0  # Already in GB
+                    # If value is very small (< 0.1), it might be in MB, convert to GB
+                    if gpu_memory_used > 0 and gpu_memory_used < 0.1:
+                        gpu_memory_used = gpu_memory_used / 1024.0  # Convert MB to GB
                 
                 # Try memory_total_mb first (more reliable)
                 if gpu_data.get('memory_total_mb') is not None:
                     gpu_memory_total = float(gpu_data.get('memory_total_mb', 0)) / 1024.0
                 elif gpu_data.get('memory_total') is not None:
                     gpu_memory_total = float(gpu_data.get('memory_total', 0))
-                    if gpu_memory_total < 0.1:  # If < 0.1 GB, might be in MB
-                        gpu_memory_total = gpu_memory_total * 1024.0 / 1024.0  # Already in GB
+                    # If value is very small (< 0.1), it might be in MB, convert to GB
+                    if gpu_memory_total > 0 and gpu_memory_total < 0.1:
+                        gpu_memory_total = gpu_memory_total / 1024.0  # Convert MB to GB
                 
                 # Fallback: use GPU name to guess memory (if known)
                 if gpu_memory_total is None or gpu_memory_total == 0:

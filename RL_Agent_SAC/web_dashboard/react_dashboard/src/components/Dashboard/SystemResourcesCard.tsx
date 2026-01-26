@@ -66,7 +66,9 @@ function SystemResourcesCard({ system, power }: SystemResourcesCardProps) {
             color={cpuColor}
             sx={{ height: 8, borderRadius: 4, mb: 0.5 }}
           />
-          {system.cpu.temperature !== null && system.cpu.temperature !== undefined && (
+          {system.cpu.temperature !== null && 
+           system.cpu.temperature !== undefined && 
+           !isNaN(system.cpu.temperature) && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
               <Typography variant="caption" color="text.secondary">
                 {system.cpu.temperature.toFixed(1)}°C
