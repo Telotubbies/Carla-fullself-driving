@@ -257,7 +257,7 @@ function WorkflowDiagram() {
                       Reward-Based Progression
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Increase difficulty faster when performing well (avg reward > 200)
+                      Increase difficulty faster when performing well (avg reward &gt; 200)
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                       Adaptive based on last 50 episodes
@@ -421,7 +421,7 @@ function WorkflowDiagram() {
                       Disk Space Management
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Automatic cleanup every 6 hours or when disk < 10GB free
+                      Automatic cleanup every 6 hours or when disk &lt; 10GB free
                     </Typography>
                   </Box>
                 </Box>
