@@ -382,6 +382,19 @@ def setup_callbacks(config: dict, dirs: dict, eval_env=None, sqlite_manager=None
                             raise save_error[0]
                         save_time = time.time() - start_time
                         logging.info(f"✅ Checkpoint save completed in {save_time:.2f}s: {old_path}")
+                        
+                        # Compress checkpoint to reduce disk space
+                        try:
+                            from utils.checkpoint_compression import compress_checkpoint
+                            compress_start = time.time()
+                            success, saved_mb = compress_checkpoint(old_path, compression_level=9, backup=False)
+                            if success:
+                                compress_time = time.time() - compress_start
+                                logging.info(f"🗜️  Checkpoint compressed: saved {saved_mb:.2f} MB in {compress_time:.2f}s")
+                            else:
+                                logging.debug(f"Checkpoint already compressed or no improvement")
+                        except Exception as compress_error:
+                            logging.warning(f"Failed to compress checkpoint (non-critical): {compress_error}")
                     except Exception as e:
                         logging.error(f"❌ Checkpoint save error: {e}", exc_info=True)
                         return
@@ -424,6 +437,17 @@ def setup_callbacks(config: dict, dirs: dict, eval_env=None, sqlite_manager=None
                                 raise save_error[0]
                             save_time = time.time() - start_time
                             logging.info(f"✅ Enhanced checkpoint save completed in {save_time:.2f}s: {model_path}")
+                            
+                            # Compress enhanced checkpoint to reduce disk space
+                            try:
+                                from utils.checkpoint_compression import compress_checkpoint
+                                compress_start = time.time()
+                                success, saved_mb = compress_checkpoint(model_path, compression_level=9, backup=False)
+                                if success:
+                                    compress_time = time.time() - compress_start
+                                    logging.info(f"🗜️  Enhanced checkpoint compressed: saved {saved_mb:.2f} MB in {compress_time:.2f}s")
+                            except Exception as compress_error:
+                                logging.warning(f"Failed to compress enhanced checkpoint (non-critical): {compress_error}")
                         except Exception as e:
                             logging.error(f"❌ Enhanced checkpoint save error: {e}", exc_info=True)
                             return
@@ -476,7 +500,7 @@ def setup_callbacks(config: dict, dirs: dict, eval_env=None, sqlite_manager=None
         save_freq=save_freq,
         save_path=os.path.join(dirs['checkpoints'], 'checkpoint'),
         name_prefix='rl_model',
-        save_replay_buffer=True,
+        save_replay_buffer=False,  # Disabled: replay buffers are huge (400GB+) and not needed for resuming
         save_vecnormalize=False
     )
     if save_format != 'old':
@@ -716,11 +740,17 @@ def main():
     sqlite_manager = None
     use_sqlite = config.get('checkpoints', {}).get('use_sqlite', True)
     clear_db = config.get('checkpoints', {}).get('clear_on_start', False)
+    max_checkpoints = config.get('checkpoints', {}).get('max_checkpoints_to_keep', 1)
+    save_optimizer = config.get('checkpoints', {}).get('save_optimizer', False)
     if use_sqlite:
         db_path = config.get('checkpoints', {}).get('sqlite_db', 'checkpoints/training_checkpoints.db')
         db_path = os.path.join(base_dir, db_path)
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
-        sqlite_manager = SQLiteCheckpointManager(db_path)
+        sqlite_manager = SQLiteCheckpointManager(
+            db_path,
+            max_checkpoints=max_checkpoints,
+            save_optimizer=save_optimizer
+        )
         if clear_db:
             try:
                 sqlite_manager.clear_database()

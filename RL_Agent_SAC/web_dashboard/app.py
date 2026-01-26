@@ -297,11 +297,15 @@ def get_system_metrics():
         )
         if result.returncode == 0:
             for line in result.stdout.split('\n'):
-                if 'Package id 0' in line or 'Tdie' in line or 'CPU Temperature' in line:
+                # Only match CPU temperature, not GPU
+                if ('Package id 0' in line or 'Tdie' in line or 'CPU Temperature' in line) and 'GPU' not in line.upper():
                     match = re.search(r'\+?([\d.]+)°C', line)
                     if match:
-                        metrics['cpu']['temp'] = float(match.group(1))
-                        break
+                        temp_val = float(match.group(1))
+                        # Validate CPU temp range (typically 20-100°C)
+                        if 20 <= temp_val <= 100:
+                            metrics['cpu']['temp'] = temp_val
+                            break
     except:
         pass
     try:

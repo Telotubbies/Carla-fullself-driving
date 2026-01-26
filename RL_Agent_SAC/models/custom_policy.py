@@ -75,8 +75,9 @@ class VisionFeaturesExtractor(BaseFeaturesExtractor):
             else:
                 self.gps_encoder = None
             if self.use_goal:
+                # goal: 4D (x, y, z, relative_angle) + distance_to_goal: 1D = 5D total
                 self.goal_encoder = nn.Sequential(
-                    nn.Linear(4, 16),
+                    nn.Linear(5, 16),
                     nn.ReLU(),
                     nn.Linear(16, 16)
                 )
@@ -93,8 +94,9 @@ class VisionFeaturesExtractor(BaseFeaturesExtractor):
             else:
                 self.waypoint_encoder = None
             if self.use_velocity:
+                # Velocity observation: shape=(7,) [speed_kmh, vx, vy, vz, speed_ms, yaw, yaw_rate]
                 self.velocity_encoder = nn.Sequential(
-                    nn.Linear(5, 16),
+                    nn.Linear(7, 16),
                     nn.ReLU(),
                     nn.Linear(16, 16)
                 )

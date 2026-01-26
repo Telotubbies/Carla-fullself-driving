@@ -30,8 +30,8 @@ function DashboardContent() {
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' },
           gap: 2,
-          height: 'calc(100vh - 100px)',
-          overflow: 'hidden',
+          minHeight: '100%',
+          pb: 2,
         }}
       >
         {/* Top Row: Training Progress (Full Width) */}
@@ -50,13 +50,12 @@ function DashboardContent() {
           <TrainingChart />
         </Box>
 
-        {/* Bottom Row: Checkpoint & Logs (20% height, scrollable) */}
+        {/* Bottom Row: Checkpoint & Logs (scrollable) */}
         <Box 
           sx={{ 
             gridColumn: { xs: '1', md: '1 / 13' },
-            height: '20%',
-            minHeight: '200px',
-            maxHeight: '400px',
+            minHeight: '300px',
+            maxHeight: '500px',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',

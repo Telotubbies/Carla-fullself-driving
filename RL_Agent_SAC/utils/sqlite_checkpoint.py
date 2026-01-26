@@ -11,10 +11,12 @@ import numpy as np
 import torch
 class SQLiteCheckpointManager:
     
-    def __init__(self, db_path: str, enable_wal: bool = True):
+    def __init__(self, db_path: str, enable_wal: bool = True, max_checkpoints: int = 1, save_optimizer: bool = False):
         
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.max_checkpoints = max_checkpoints  # Keep only latest N checkpoints
+        self.save_optimizer = save_optimizer  # Skip optimizer to save disk space
         import threading
         self._main_thread_id = threading.get_ident()
         self._thread_connections = {}
@@ -28,6 +30,8 @@ class SQLiteCheckpointManager:
             self.conn.execute('PRAGMA temp_store=MEMORY')
         self._create_tables()
         logging.info(f"✅ SQLite checkpoint manager initialized: {self.db_path} (main thread: {self._main_thread_id})")
+        logging.info(f"   - Max checkpoints to keep: {self.max_checkpoints}")
+        logging.info(f"   - Save optimizer: {self.save_optimizer}")
     def clear_database(self):
         
         try:
@@ -140,10 +144,12 @@ class SQLiteCheckpointManager:
             model_buffer = self._serialize_model(model)
             logging.info(f"💾 Model serialized: {len(model_buffer) / (1024*1024):.2f} MB")
             optimizer_buffer = None
-            if hasattr(model, 'policy') and hasattr(model.policy, 'optimizer'):
+            if self.save_optimizer and hasattr(model, 'policy') and hasattr(model.policy, 'optimizer'):
                 logging.info(f"💾 Serializing optimizer...")
                 optimizer_buffer = self._serialize_optimizer(model.policy.optimizer)
                 logging.info(f"💾 Optimizer serialized: {len(optimizer_buffer) / (1024*1024):.2f} MB")
+            elif not self.save_optimizer:
+                logging.info(f"💾 Skipping optimizer save (saves ~30-50% disk space)")
             logging.info(f"💾 Creating training state...")
             training_state = {
                 'n_steps': getattr(model, 'n_steps', 0),
@@ -170,6 +176,10 @@ class SQLiteCheckpointManager:
             checkpoint_id = cursor.lastrowid
             logging.info(f"💾 Committing transaction...")
             conn.commit()
+            
+            # Cleanup old checkpoints immediately after save to save disk space
+            self._cleanup_old_checkpoints(conn)
+            
             elapsed = time.time() - start_time
             logging.info(f"💾 Checkpoint saved to SQLite: timestep={timestep}, id={checkpoint_id}, elapsed={elapsed:.2f}s")
             return checkpoint_id
@@ -373,6 +383,40 @@ class SQLiteCheckpointManager:
     def _deserialize_optimizer(self, data: bytes) -> Any:
         
         return pickle.loads(gzip.decompress(data))
+    
+    def _cleanup_old_checkpoints(self, conn=None):
+        """Remove old checkpoints, keeping only the latest N"""
+        try:
+            if conn is None:
+                conn = self._get_connection()
+            
+            cursor = conn.cursor()
+            # Get all checkpoints sorted by timestep (newest first)
+            cursor.execute("SELECT id, timestep FROM checkpoints ORDER BY timestep DESC")
+            all_checkpoints = cursor.fetchall()
+            
+            # Keep only the latest N checkpoints
+            if len(all_checkpoints) > self.max_checkpoints:
+                checkpoints_to_remove = all_checkpoints[self.max_checkpoints:]
+                removed_count = 0
+                for checkpoint_id, timestep in checkpoints_to_remove:
+                    cursor.execute("DELETE FROM checkpoints WHERE id = ?", (checkpoint_id,))
+                    removed_count += 1
+                    logging.debug(f"🗑️  Removed old checkpoint from DB: timestep {timestep}")
+                
+                conn.commit()
+                
+                # Run VACUUM periodically to reclaim disk space (every 5 deletions)
+                if removed_count > 0 and removed_count % 5 == 0:
+                    logging.info(f"🧹 Running VACUUM to reclaim disk space...")
+                    conn.execute("VACUUM")
+                    conn.commit()
+                    logging.info(f"✅ VACUUM completed")
+                
+                if removed_count > 0:
+                    logging.info(f"✅ Cleaned up {removed_count} old checkpoint(s), keeping only latest {self.max_checkpoints}")
+        except Exception as e:
+            logging.warning(f"Failed to cleanup old checkpoints: {e}")
     def close(self):
         
         if self.conn:

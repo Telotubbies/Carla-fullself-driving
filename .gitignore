@@ -67,3 +67,15 @@ Thumbs.db
 *.tmp
 *.bak
 *.backup
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# React build files
+build/
+dist/
+*.pid
+
+# Production build artifacts
+*.map

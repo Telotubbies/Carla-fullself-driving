@@ -12,11 +12,13 @@ checkpoints:
   clear_on_start: true  # Clear database on start for fresh training
   enabled: true
   save_path: checkpoints
-  save_freq: 1000  # Save checkpoint every 1k steps
+  save_freq: 2000  # Save checkpoint every 2k steps (increased to reduce disk usage)
   sqlite_db: checkpoints/training_checkpoints.db
   use_sqlite: true
+  # Disk space optimization
+  save_optimizer: false  # Skip optimizer state to save ~30-50% disk space (can resume without optimizer)
+  max_checkpoints_to_keep: 1  # Keep only latest 1 checkpoint in SQLite DB (auto cleanup after save)
   # Automatic cleanup to prevent disk full
-  max_checkpoints_to_keep: 1  # Keep only latest 1 checkpoint (current only)
   cleanup_old_checkpoints: true  # Enable automatic cleanup
   max_checkpoint_size_mb: 500  # Skip saving if checkpoint > 500MB (likely corrupted)
 

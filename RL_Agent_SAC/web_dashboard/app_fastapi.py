@@ -113,6 +113,160 @@ async def api_status():
     status = await loop.run_in_executor(None, get_training_status)
     system_metrics = await loop.run_in_executor(None, get_system_metrics)
     power_info = await loop.run_in_executor(None, get_power_consumption)
+    
+    # Transform system_metrics to match React component expectations
+    import psutil
+    mem = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    cpu_count = psutil.cpu_count()
+    cpu_percent = system_metrics.get('cpu', {}).get('usage', 0)
+    
+    transformed_system = {
+        'cpu': {
+            'usage': cpu_percent,
+            'percent': cpu_percent,
+            'used_gb': round(mem.used / (1024**3), 2),  # Show actual memory used (CPU processes use memory)
+            'total_gb': round(mem.total / (1024**3), 2),  # Show total system memory
+            'free_gb': round(mem.available / (1024**3), 2),
+        },
+        'memory': {
+            'percent': mem.percent,
+            'used_gb': mem.used / (1024**3),
+            'total_gb': mem.total / (1024**3),
+            'free_gb': mem.available / (1024**3),
+        },
+        'disk': {
+            'used_percent': (disk.used / disk.total) * 100,
+            'used_gb': disk.used / (1024**3),
+            'total_gb': disk.total / (1024**3),
+            'free_gb': disk.free / (1024**3),
+        },
+    }
+    
+    # Add GPU if available
+    if 'gpu' in system_metrics and system_metrics['gpu'].get('name'):
+        gpu_data = system_metrics['gpu']
+        # Try multiple ways to get GPU memory
+        gpu_memory_used = 0
+        gpu_memory_total = 0
+        
+        # Method 1: Direct values
+        if gpu_data.get('memory_used'):
+            gpu_memory_used = gpu_data.get('memory_used')
+        elif gpu_data.get('memory_used_mb'):
+            gpu_memory_used = gpu_data.get('memory_used_mb') / 1024.0
+        
+        if gpu_data.get('memory_total'):
+            gpu_memory_total = gpu_data.get('memory_total')
+        elif gpu_data.get('memory_total_mb'):
+            gpu_memory_total = gpu_data.get('memory_total_mb') / 1024.0
+        
+        # Method 2: Try to get from rocm-smi directly (always try to get latest data)
+        if True:  # Always refresh GPU memory data
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['rocm-smi', '--showmemuse', '--json'],
+                    capture_output=True,
+                    text=True,
+                    timeout=2
+                )
+                if result.returncode == 0:
+                    import json
+                    rocm_data = json.loads(result.stdout)
+                    for key, card_data in rocm_data.items():
+                        if 'card' in key.lower() and isinstance(card_data, dict):
+                            # Try different memory field names
+                            mem_info = card_data.get('Memory', {})
+                            if isinstance(mem_info, dict):
+                                mem_total_mb = mem_info.get('Total Memory (MB)') or mem_info.get('Total Memory')
+                                mem_used_mb = mem_info.get('Used Memory (MB)') or mem_info.get('Used Memory')
+                                if mem_total_mb:
+                                    try:
+                                        if isinstance(mem_total_mb, str):
+                                            mem_total_mb = re.sub(r'[^\d.]', '', mem_total_mb)
+                                        gpu_memory_total = float(mem_total_mb) / 1024.0
+                                    except:
+                                        pass
+                                if mem_used_mb:
+                                    try:
+                                        if isinstance(mem_used_mb, str):
+                                            mem_used_mb = re.sub(r'[^\d.]', '', mem_used_mb)
+                                        gpu_memory_used = float(mem_used_mb) / 1024.0
+                                    except:
+                                        pass
+                            # Also check for VRAM% field to calculate used memory
+                            vram_percent = card_data.get('GPU Memory Allocated (VRAM%)')
+                            if vram_percent:
+                                try:
+                                    if isinstance(vram_percent, str):
+                                        vram_percent = re.sub(r'[^\d.]', '', vram_percent)
+                                    vram_pct = float(vram_percent)
+                                    # Calculate used from VRAM% if we have total
+                                    if gpu_memory_total > 0:
+                                        gpu_memory_used = (gpu_memory_total * vram_pct) / 100.0
+                                    # Or set total if we have VRAM% but no total yet
+                                    elif gpu_memory_total == 0:
+                                        # Use fallback total (16 GB for RX 7800 XT)
+                                        gpu_name = gpu_data.get('name', '').lower()
+                                        if '7800 xt' in gpu_name or 'rx 7800' in gpu_name:
+                                            gpu_memory_total = 16.0
+                                            gpu_memory_used = (gpu_memory_total * vram_pct) / 100.0
+                                except:
+                                    pass
+                            break
+            except Exception as e:
+                pass
+        
+        # Fallback: Use known GPU memory if name matches and we still don't have total
+        if gpu_memory_total == 0:
+            gpu_name = gpu_data.get('name', '').lower()
+            if '7800 xt' in gpu_name or 'rx 7800' in gpu_name:
+                gpu_memory_total = 16.0  # 16 GB for RX 7800 XT
+        
+        # Final fallback: Calculate used from VRAM% if we have total but no used
+        if gpu_memory_total > 0 and gpu_memory_used == 0:
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['rocm-smi', '--showmemuse', '--json'],
+                    capture_output=True,
+                    text=True,
+                    timeout=2
+                )
+                if result.returncode == 0:
+                    import json
+                    rocm_data = json.loads(result.stdout)
+                    for key, card_data in rocm_data.items():
+                        if 'card' in key.lower() and isinstance(card_data, dict):
+                            vram_percent = card_data.get('GPU Memory Allocated (VRAM%)')
+                            if vram_percent:
+                                try:
+                                    if isinstance(vram_percent, str):
+                                        vram_percent = re.sub(r'[^\d.]', '', vram_percent)
+                                    vram_pct = float(vram_percent)
+                                    gpu_memory_used = (gpu_memory_total * vram_pct) / 100.0
+                                except:
+                                    pass
+                            break
+            except:
+                pass
+        
+        transformed_system['gpu'] = [{
+            'name': gpu_data.get('name', 'Unknown'),
+            'memory_used': round(gpu_memory_used, 2),
+            'memory_total': round(gpu_memory_total, 2),
+            'utilization': gpu_data.get('usage', 0) or 0,
+            'temperature': gpu_data.get('temp', 0) or 0,
+        }]
+    
+    # Transform power info
+    transformed_power = {
+        'power_draw': power_info.get('current_power_watt', 0),
+        'energy_used': power_info.get('cumulative_energy_kwh', 0),
+        'cost_estimate': power_info.get('cumulative_cost_baht', 0),
+    }
+    
     started = 0
     target = 500000
     metrics_step = metrics.get('current_step', 0) or 0
@@ -123,8 +277,8 @@ async def api_status():
         'checkpoint': checkpoint,
         'metrics': metrics,
         'status': status,
-        'system': system_metrics,
-        'power': power_info,
+        'system': transformed_system,
+        'power': transformed_power,
         'progress': {
             'current': current,
             'started': started,
@@ -151,13 +305,15 @@ async def api_metrics_history():
     log_file = await loop.run_in_executor(None, get_latest_training_log)
     if not log_file or not log_file.exists():
         checkpoints = await loop.run_in_executor(None, get_all_checkpoints)
-        history = {
-            'timesteps': [c['timestep'] for c in checkpoints],
-            'rewards': [c['reward'] if c['reward'] else 0 for c in checkpoints],
-            'episodes': [c['episode'] if c['episode'] else 0 for c in checkpoints],
-            'dates': [c['created_at'] for c in checkpoints]
-        }
-        return history
+        # Transform to format expected by React component: [{step, reward, timestamp}]
+        result = []
+        for c in checkpoints:
+            result.append({
+                'step': c['timestep'],
+                'reward': c['reward'] if c['reward'] else 0,
+                'timestamp': c['created_at']
+            })
+        return result
     def parse_history_from_log(log_file):
         import re
         timesteps = []
@@ -233,7 +389,18 @@ async def api_metrics_history():
             'dates': dates
         }
     history = await loop.run_in_executor(None, parse_history_from_log, log_file)
-    return history
+    # Transform to format expected by React component: [{step, reward, timestamp}]
+    result = []
+    timesteps = history.get('timesteps', [])
+    rewards = history.get('rewards', [])
+    dates = history.get('dates', [])
+    for i in range(len(timesteps)):
+        result.append({
+            'step': timesteps[i],
+            'reward': rewards[i] if i < len(rewards) else 0,
+            'timestamp': dates[i] if i < len(dates) and dates[i] else None
+        })
+    return result
 @app.post("/api/demo/reset")
 async def api_demo_reset():
     
@@ -246,6 +413,74 @@ async def api_demo_step(request: Request):
 async def api_demo_state():
     
     return {'success': False, 'error': '2D Demo is disabled'}
+@app.get("/api/logs/sac_training")
+async def api_sac_training_log():
+    
+    LOG_DIR = BASE_DIR / "logs"
+    try:
+        loop = asyncio.get_event_loop()
+        def find_and_read_log():
+            # Find latest sac_training_*.log file
+            sac_logs = list(LOG_DIR.glob("sac_training_*.log"))
+            if not sac_logs:
+                return {
+                    'content': '',
+                    'filename': None
+                }
+            latest_log = max(sac_logs, key=lambda p: p.stat().st_mtime)
+            try:
+                with open(latest_log, 'r', encoding='utf-8', errors='ignore') as f:
+                    all_lines = f.readlines()
+                    # Return last 500 lines
+                    lines = all_lines[-500:] if len(all_lines) > 500 else all_lines
+                    content = ''.join(lines)
+                return {
+                    'content': content,
+                    'filename': latest_log.name
+                }
+            except Exception as e:
+                return {
+                    'content': f'Error reading log: {str(e)}',
+                    'filename': latest_log.name
+                }
+        result = await loop.run_in_executor(None, find_and_read_log)
+        return result
+    except Exception as e:
+        return {
+            'content': f'Error: {str(e)}',
+            'filename': None
+        }
+
+@app.get("/api/logs")
+async def api_logs():
+    """System log endpoint (auto_manage.log)"""
+    LOG_DIR = BASE_DIR / "logs"
+    auto_manage_log = LOG_DIR / "auto_manage.log"
+    try:
+        loop = asyncio.get_event_loop()
+        def read_log():
+            if auto_manage_log.exists():
+                with open(auto_manage_log, 'r', encoding='utf-8', errors='ignore') as f:
+                    all_lines = f.readlines()
+                    lines = all_lines[-500:] if len(all_lines) > 500 else all_lines
+                    content = ''.join(lines)
+                return {
+                    'content': content,
+                    'filename': 'auto_manage.log'
+                }
+            else:
+                return {
+                    'content': 'Log file not found',
+                    'filename': None
+                }
+        result = await loop.run_in_executor(None, read_log)
+        return result
+    except Exception as e:
+        return {
+            'content': f'Error: {str(e)}',
+            'filename': None
+        }
+
 @app.get("/api/logs/auto_manage")
 async def api_auto_manage_log():
     

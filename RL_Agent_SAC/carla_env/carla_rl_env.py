@@ -24,7 +24,7 @@ except ImportError:
     DATA_AUGMENTATION_AVAILABLE = False
     logging.warning("DataAugmentation not available")
 class ThreadedOperation:
-    
+
     @staticmethod
     def run(
         func: Any, timeout: float, description: str = "Operation", accept_timeout: bool = False
@@ -48,7 +48,7 @@ class ThreadedOperation:
                 return False, TimeoutError(f"{description} timed out after {timeout}s")
         return result["success"], result["error"]
 class CarlaRLEnv(gym.Env):
-    
+
     metadata = {"render_modes": ["human", "rgb_array"]}
     def __init__(self, config: Dict[str, Any], port: int = None, rank: int = 0):
         super().__init__()
@@ -169,12 +169,16 @@ class CarlaRLEnv(gym.Env):
             if self.use_gps:
                 space_dict["gps"] = spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
             if self.use_goal:
-                space_dict["goal"] = spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
+                space_dict["goal"] = spaces.Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float32)  # Added relative_angle
                 space_dict["distance_to_goal"] = spaces.Box(low=0.0, high=np.inf, shape=(1,), dtype=np.float32)
             if self.use_waypoint:
                 space_dict["waypoint"] = spaces.Box(low=-1.0, high=1.0, shape=(8,), dtype=np.float32)
             if self.use_velocity:
-                space_dict["velocity"] = spaces.Box(low=-1.0, high=1.0, shape=(5,), dtype=np.float32)
+                space_dict["velocity"] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)  # [speed_kmh, vx, vy, vz, speed_ms, yaw, yaw_rate]
+            # Add vehicle physics parameters for better generalization
+            space_dict["vehicle_params"] = spaces.Box(low=-1.0, high=1.0, shape=(5,), dtype=np.float32)  # [mass_norm, wheel_friction_norm, engine_power_norm, max_rpm_norm, drag_norm]
+            # Add obstacle detection for avoidance
+            space_dict["obstacles"] = spaces.Box(low=0.0, high=1.0, shape=(4,), dtype=np.float32)  # [nearest_vehicle_dist, nearest_pedestrian_dist, obstacle_in_front, safe_distance_ratio]
             self.observation_space = spaces.Dict(space_dict)
         else:
             self.observation_space = spaces.Box(low=0.0, high=1.0, shape=vision_shape, dtype=np.float32)
@@ -229,6 +233,15 @@ class CarlaRLEnv(gym.Env):
             if not self.client:
                 logging.error("Cannot load world: client not initialized")
                 return False
+
+            # Check for town randomization
+            domain_rand = self.env_config.get("domain_randomization", {})
+            if domain_rand.get("enabled", False) and domain_rand.get("town_randomization", False):
+                import random
+                available_towns = domain_rand.get("towns", [requested_town])
+                requested_town = random.choice(available_towns)
+                logging.info(f"🎲 Randomly selected town: {requested_town}")
+            
             self.world = self.client.load_world(requested_town, reset_settings=False)
             logging.info(f"✅ Loaded town: {requested_town}")
             return True
@@ -284,7 +297,7 @@ class CarlaRLEnv(gym.Env):
             )
         self.world.set_weather(weather)
     def _spawn_traffic_manager(self):
-        
+
         self.actors = []
         if self.curriculum_enabled:
             v_range = self.curriculum_config.get("num_vehicles", [0, 10])
@@ -299,7 +312,7 @@ class CarlaRLEnv(gym.Env):
         if num_vehicles > 0 or num_pedestrians > 0:
             self._spawn_obstacles(num_vehicles, num_pedestrians, enable_traffic)
     def _spawn_obstacles(self, n_vehicles: int, n_walkers: int, enable_autopilot: bool):
-        
+
         import random
         spawn_points = self.world.get_map().get_spawn_points()
         random.shuffle(spawn_points)
@@ -382,6 +395,11 @@ class CarlaRLEnv(gym.Env):
                 try:
                     self.vehicle.set_simulate_physics(True)
                     self.vehicle.set_autopilot(False)
+                    
+                    # Apply vehicle randomization if enabled
+                    domain_rand = self.env_config.get("domain_randomization", {})
+                    if domain_rand.get("enabled", False) and domain_rand.get("vehicle_randomization", False):
+                        self._randomize_vehicle_physics()
                 except Exception as e:
                     logging.warning(f"Vehicle config warning: {e}")
                 return True
@@ -396,8 +414,45 @@ class CarlaRLEnv(gym.Env):
                         logging.warning(f"Reconnection attempt failed: {reconnect_error}")
                 else:
                     logging.error(f"Error in _spawn_agent after {max_retries} retries: {e}", exc_info=True)
-                    return False
         return False
+    def _randomize_vehicle_physics(self):
+        """Randomize vehicle physics parameters for domain randomization"""
+        if not self.vehicle:
+            return
+        try:
+            import random
+            domain_rand = self.env_config.get("domain_randomization", {})
+            attrs = domain_rand.get("vehicle_attributes", {})
+            
+            physics_control = self.vehicle.get_physics_control()
+            
+            # Randomize mass
+            if "mass_range" in attrs:
+                mass = random.uniform(*attrs["mass_range"])
+                physics_control.mass = mass
+            
+            # Randomize wheel friction
+            if "wheel_friction_range" in attrs:
+                friction = random.uniform(*attrs["wheel_friction_range"])
+                for wheel in physics_control.wheels:
+                    wheel.tire_friction = friction
+                physics_control.wheels = list(physics_control.wheels)
+            
+            # Randomize max RPM
+            if "max_rpm_range" in attrs:
+                max_rpm = random.uniform(*attrs["max_rpm_range"])
+                physics_control.max_rpm = max_rpm
+            
+            # Randomize damping rate
+            if "damping_rate_range" in attrs:
+                damping = random.uniform(*attrs["damping_rate_range"])
+                physics_control.damping_rate_full_throttle = damping
+            
+            # Apply physics control
+            self.vehicle.apply_physics_control(physics_control)
+            logging.debug(f"Applied randomized vehicle physics: mass={physics_control.mass:.1f}kg, friction={friction:.2f}")
+        except Exception as e:
+            logging.warning(f"Failed to randomize vehicle physics: {e}")
     def _reset_goal(self):
         
         if not self.vehicle:
@@ -697,11 +752,24 @@ class CarlaRLEnv(gym.Env):
                     else np.zeros((3,), dtype=np.float32)
                 )
             if self.use_goal:
-                obs["goal"] = (
-                    np.array([self.goal_location.x, self.goal_location.y, self.goal_location.z])
-                    if self.goal_location
-                    else np.zeros(3)
-                )
+                if self.goal_location and self.vehicle:
+                    goal_pos = np.array([self.goal_location.x, self.goal_location.y, self.goal_location.z])
+                    # Add relative angle to goal
+                    t = self.vehicle.get_transform()
+                    vehicle_pos = np.array([t.location.x, t.location.y, t.location.z])
+                    goal_vec = goal_pos - vehicle_pos
+                    goal_dist_2d = np.sqrt(goal_vec[0]**2 + goal_vec[1]**2)
+                    if goal_dist_2d > 0.1:
+                        goal_angle_2d = np.arctan2(goal_vec[1], goal_vec[0])
+                        yaw_rad = np.radians(t.rotation.yaw)
+                        relative_angle = goal_angle_2d - yaw_rad
+                        relative_angle = np.arctan2(np.sin(relative_angle), np.cos(relative_angle))  # Normalize to [-pi, pi]
+                        relative_angle_norm = np.clip(relative_angle / np.pi, -1, 1)
+                    else:
+                        relative_angle_norm = 0.0
+                    obs["goal"] = np.concatenate([goal_pos, [relative_angle_norm]])  # 4D: [x, y, z, relative_angle]
+                else:
+                    obs["goal"] = np.zeros(4)  # 4D instead of 3D
                 obs["distance_to_goal"] = (
                     np.array([self.distance_to_goal]) if self.distance_to_goal else np.array([0.0])
                 )
@@ -709,6 +777,14 @@ class CarlaRLEnv(gym.Env):
                 obs["waypoint"] = self._get_waypoint_features()
             if self.use_velocity:
                 obs["velocity"] = self._get_velocity_features()
+            # Add vehicle physics parameters
+            obs["vehicle_params"] = self._get_vehicle_params()
+            # Add obstacle detection
+            obs["obstacles"] = self._get_obstacle_features()
+            # Initialize last_yaw if not exists
+            if not hasattr(self, 'last_yaw') and self.vehicle:
+                t = self.vehicle.get_transform()
+                self.last_yaw = np.radians(t.rotation.yaw)
             if self.step_count % 50 == 0 and rgb is not None:
                 self._save_snapshot(rgb)
             return obs
@@ -781,22 +857,181 @@ class CarlaRLEnv(gym.Env):
             return np.zeros(8, dtype=np.float32)
     def _get_velocity_features(self):
         if not self.vehicle:
-            return np.zeros(5, dtype=np.float32)
+            return np.zeros(7, dtype=np.float32)
         try:
             v = self.vehicle.get_velocity()
             speed_ms = np.sqrt(v.x**2 + v.y**2 + v.z**2)
+            
+            # Get vehicle orientation (yaw angle)
+            t = self.vehicle.get_transform()
+            yaw_rad = np.radians(t.rotation.yaw)
+            yaw_normalized = np.clip(yaw_rad / np.pi, -1, 1)  # Normalize to [-1, 1]
+            
+            # Get angular velocity (yaw rate) - approximate from previous yaw
+            if not hasattr(self, 'last_yaw'):
+                self.last_yaw = yaw_rad
+            yaw_rate = yaw_rad - self.last_yaw
+            # Normalize yaw rate (assuming max ~1 rad/s per step)
+            yaw_rate_normalized = np.clip(yaw_rate / 1.0, -1, 1)
+            self.last_yaw = yaw_rad
+            
             return np.array(
                 [
-                    np.clip((speed_ms * 3.6) / 100, 0, 1),
-                    np.clip(v.x / 15, -1, 1),
-                    np.clip(v.y / 15, -1, 1),
-                    np.clip(v.z / 5, -1, 1),
-                    np.clip(speed_ms / 15, 0, 1),
+                    np.clip((speed_ms * 3.6) / 100, 0, 1),  # Speed in km/h normalized
+                    np.clip(v.x / 15, -1, 1),                # Velocity x
+                    np.clip(v.y / 15, -1, 1),                # Velocity y
+                    np.clip(v.z / 5, -1, 1),                 # Velocity z
+                    np.clip(speed_ms / 15, 0, 1),            # Speed in m/s normalized
+                    yaw_normalized,                           # Vehicle yaw angle (heading)
+                    yaw_rate_normalized,                      # Angular velocity (yaw rate)
                 ],
                 dtype=np.float32,
             )
         except:
+            return np.zeros(7, dtype=np.float32)
+    def _get_vehicle_params(self):
+        """Get normalized vehicle physics parameters for observation"""
+        if not self.vehicle:
             return np.zeros(5, dtype=np.float32)
+        try:
+            physics_control = self.vehicle.get_physics_control()
+            
+            # Normalize vehicle parameters
+            mass = physics_control.mass
+            mass_norm = np.clip((mass - 1200.0) / (2500.0 - 1200.0), -1, 1)  # Normalize to [-1, 1]
+            
+            # Get wheel friction (average of all wheels)
+            if len(physics_control.wheels) > 0:
+                wheel_friction = np.mean([w.tire_friction for w in physics_control.wheels])
+            else:
+                wheel_friction = 0.9  # Default
+            wheel_friction_norm = np.clip((wheel_friction - 0.6) / (1.2 - 0.6), -1, 1)
+            
+            # Estimate engine power from max_rpm and torque curve
+            max_rpm = physics_control.max_rpm
+            max_rpm_norm = np.clip((max_rpm - 3000.0) / (7000.0 - 3000.0), -1, 1)
+            
+            # Estimate power from torque curve (simplified)
+            if len(physics_control.torque_curve) > 0:
+                max_torque = max([t.y for t in physics_control.torque_curve])
+                # Power ≈ Torque × RPM / 9549 (simplified, normalized)
+                engine_power_est = (max_torque * max_rpm) / 9549.0  # kW
+            else:
+                engine_power_est = 150.0  # Default
+            engine_power_norm = np.clip((engine_power_est - 100.0) / (300.0 - 100.0), -1, 1)
+            
+            # Drag coefficient
+            drag_coeff = physics_control.drag_coefficient
+            drag_norm = np.clip((drag_coeff - 0.2) / (0.5 - 0.2), -1, 1)
+            
+            return np.array(
+                [
+                    mass_norm,
+                    wheel_friction_norm,
+                    engine_power_norm,
+                    max_rpm_norm,
+                    drag_norm,
+                ],
+                dtype=np.float32,
+            )
+        except Exception as e:
+            logging.debug(f"Error getting vehicle params: {e}")
+            return np.zeros(5, dtype=np.float32)
+    def _get_obstacle_features(self):
+        """Detect obstacles (vehicles and pedestrians) for avoidance"""
+        if not self.vehicle or not self.world:
+            return np.zeros(4, dtype=np.float32)
+        try:
+            vehicle_transform = self.vehicle.get_transform()
+            vehicle_location = vehicle_transform.location
+            vehicle_forward = vehicle_transform.get_forward_vector()
+            
+            # Get all vehicles and pedestrians
+            all_vehicles = self.world.get_actors().filter("*vehicle*")
+            all_pedestrians = self.world.get_actors().filter("*walker*")
+            
+            nearest_vehicle_dist = 100.0  # Max detection range
+            nearest_pedestrian_dist = 100.0
+            obstacle_in_front = 0.0
+            safe_distance_ratio = 1.0
+            
+            # Get current speed for safe distance calculation
+            v = self.vehicle.get_velocity()
+            speed_ms = np.sqrt(v.x**2 + v.y**2 + v.z**2)
+            
+            # Check vehicles
+            for vehicle in all_vehicles:
+                if vehicle.id == self.vehicle.id:
+                    continue
+                try:
+                    other_location = vehicle.get_location()
+                    distance = vehicle_location.distance(other_location)
+                    
+                    if distance < nearest_vehicle_dist:
+                        nearest_vehicle_dist = distance
+                    
+                    # Check if in front (within 60 degree cone)
+                    direction_to_other = other_location - vehicle_location
+                    direction_to_other_norm = np.sqrt(direction_to_other.x**2 + direction_to_other.y**2)
+                    if direction_to_other_norm > 0.1:
+                        direction_to_other = carla.Location(
+                            direction_to_other.x / direction_to_other_norm,
+                            direction_to_other.y / direction_to_other_norm,
+                            0
+                        )
+                        dot_product = vehicle_forward.x * direction_to_other.x + vehicle_forward.y * direction_to_other.y
+                        if dot_product > 0.5:  # ~60 degrees
+                            if distance < 30.0:  # Within 30m in front
+                                obstacle_in_front = max(obstacle_in_front, 1.0 - (distance / 30.0))
+                                
+                                # Calculate safe distance (based on speed)
+                                safe_distance = max(5.0, speed_ms * 2.0)  # 2 seconds reaction time
+                                safe_distance_ratio = min(safe_distance_ratio, distance / safe_distance)
+                except:
+                    continue
+            
+            # Check pedestrians
+            for pedestrian in all_pedestrians:
+                try:
+                    ped_location = pedestrian.get_location()
+                    distance = vehicle_location.distance(ped_location)
+                    
+                    if distance < nearest_pedestrian_dist:
+                        nearest_pedestrian_dist = distance
+                    
+                    # Check if in front
+                    direction_to_ped = ped_location - vehicle_location
+                    direction_to_ped_norm = np.sqrt(direction_to_ped.x**2 + direction_to_ped.y**2)
+                    if direction_to_ped_norm > 0.1:
+                        direction_to_ped = carla.Location(
+                            direction_to_ped.x / direction_to_ped_norm,
+                            direction_to_ped.y / direction_to_ped_norm,
+                            0
+                        )
+                        dot_product = vehicle_forward.x * direction_to_ped.x + vehicle_forward.y * direction_to_ped.y
+                        if dot_product > 0.5 and distance < 20.0:  # Within 20m in front
+                            obstacle_in_front = max(obstacle_in_front, 1.0 - (distance / 20.0))
+                            safe_distance = max(3.0, speed_ms * 1.5)  # 1.5 seconds for pedestrians
+                            safe_distance_ratio = min(safe_distance_ratio, distance / safe_distance)
+                except:
+                    continue
+            
+            # Normalize distances (0-100m -> 0-1)
+            nearest_vehicle_dist_norm = np.clip(nearest_vehicle_dist / 100.0, 0.0, 1.0)
+            nearest_pedestrian_dist_norm = np.clip(nearest_pedestrian_dist / 100.0, 0.0, 1.0)
+            
+            return np.array(
+                [
+                    nearest_vehicle_dist_norm,
+                    nearest_pedestrian_dist_norm,
+                    obstacle_in_front,
+                    safe_distance_ratio,
+                ],
+                dtype=np.float32,
+            )
+        except Exception as e:
+            logging.debug(f"Error getting obstacle features: {e}")
+            return np.zeros(4, dtype=np.float32)
     def _compute_reward_safe(self) -> float:
         try:
             return self._compute_reward_impl()
@@ -847,6 +1082,31 @@ class CarlaRLEnv(gym.Env):
         off_lane_threshold = self.reward_config.get("off_lane_threshold", tolerance * 3)
         if dist_center > off_lane_threshold:
             reward += self.reward_config.get("off_lane_penalty", -10.0)
+
+        # Obstacle avoidance rewards
+        if self.vehicle and self.world:
+            try:
+                obstacles = self._get_obstacle_features()
+                safe_distance_ratio = obstacles[3]
+                
+                # Reward for maintaining safe distance
+                if safe_distance_ratio < 0.5:  # Too close to obstacle
+                    reward += self.reward_config.get("unsafe_distance_penalty", -5.0) * (1.0 - safe_distance_ratio)
+                elif safe_distance_ratio > 0.8:  # Good safe distance
+                    reward += self.reward_config.get("safe_distance_reward", 1.0)
+                
+                # Reward for avoiding obstacles (braking when obstacle detected)
+                obstacle_in_front = obstacles[2]
+                if obstacle_in_front > 0.3:  # Obstacle detected
+                    # Check if agent is braking (good behavior)
+                    current_control = self.vehicle.get_control()
+                    if current_control.brake > 0.3:
+                        reward += self.reward_config.get("obstacle_avoidance_reward", 3.0)
+                    elif current_control.throttle > 0.5:  # Still accelerating (bad)
+                        reward += self.reward_config.get("obstacle_approach_penalty", -3.0) * obstacle_in_front
+            except:
+                pass
+        
         if self.progressive_rewards_enabled:
             reward *= self.reward_scale
         return reward

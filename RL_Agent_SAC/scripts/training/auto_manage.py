@@ -372,17 +372,24 @@ def start_dashboard():
     else:
         python_exec = "python3"
         logger.warning(f"⚠️  venv not found at {venv_python}, using system python3")
+    # Try production dashboard first, fallback to regular
+    fastapi_prod = BASE_DIR / "web_dashboard/app_fastapi_production.py"
     fastapi_app = BASE_DIR / "web_dashboard/app_fastapi.py"
-    if fastapi_app.exists():
+    
+    dashboard_file = fastapi_prod if fastapi_prod.exists() else fastapi_app
+    dashboard_module = "web_dashboard.app_fastapi_production:app" if fastapi_prod.exists() else "web_dashboard.app_fastapi:app"
+    
+    if dashboard_file.exists():
+        logger.info(f"Using dashboard: {dashboard_file.name}")
         cmd = [
             python_exec, "-m", "uvicorn",
-            "web_dashboard.app_fastapi:app",
+            dashboard_module,
             "--host", "0.0.0.0",
             "--port", str(DASHBOARD_PORT)
         ]
         cwd = BASE_DIR
     else:
-        logger.error("Dashboard app_fastapi.py not found")
+        logger.error(f"Dashboard not found: {dashboard_file}")
         return
     try:
         log_path = LOG_DIR / f"sac_dashboard_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
