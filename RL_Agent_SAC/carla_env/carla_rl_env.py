@@ -111,6 +111,7 @@ class CarlaRLEnv(gym.Env):
         self.current_episode_reward = 0.0
         prod_reward_conf = self.reward_config.get("progressive_rewards", {})
         self.progressive_rewards_enabled = prod_reward_conf.get("enabled", False)
+        self.progressive_rewards_conf = prod_reward_conf  # Store for update_reward_scale
         self.reward_scale = (
             prod_reward_conf.get("initial_scale", 1.0)
             if not self.progressive_rewards_enabled
@@ -163,6 +164,21 @@ class CarlaRLEnv(gym.Env):
                 f"difficulty={self.current_difficulty:.3f} "
                 f"(target: {self.max_difficulty:.3f})"
             )
+    
+    def update_reward_scale(self, timestep: int):
+        """Update reward scale for progressive rewards (if enabled)"""
+        if self.progressive_rewards_enabled:
+            # Gradually increase reward scale from initial to final
+            progress = min(timestep / 500000.0, 1.0)  # Full progress at 500k steps
+            self.reward_scale = (
+                self.progressive_rewards_conf.get("initial_scale", 0.5) +
+                (self.final_reward_scale - self.progressive_rewards_conf.get("initial_scale", 0.5)) * progress
+            )
+            # Clamp to final scale
+            self.reward_scale = min(self.reward_scale, self.final_reward_scale)
+            
+            if timestep % 10000 == 0:
+                logging.debug(f"Reward scale updated: {self.reward_scale:.3f} at step {timestep:,}")
     
     def _init_metrics(self):
         
