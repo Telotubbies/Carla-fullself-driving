@@ -118,6 +118,52 @@ class CarlaRLEnv(gym.Env):
         )
         self.final_reward_scale = prod_reward_conf.get("final_scale", 1.0)
         self.reward_scale_increase_rate = prod_reward_conf.get("scale_increase_rate", 0.01)
+    
+    def update_curriculum(self, timestep: int):
+        """Update curriculum difficulty based on timestep and performance"""
+        if not self.curriculum_enabled:
+            return
+        
+        # Time-based difficulty increase (gradual)
+        time_based_difficulty = min(
+            self.curriculum_config.get("initial_difficulty", 0.0) + 
+            (timestep / 500000.0) * (self.max_difficulty - self.curriculum_config.get("initial_difficulty", 0.0)),
+            self.max_difficulty
+        )
+        
+        # Reward-based difficulty adjustment
+        if self.reward_based_curriculum and len(self.episode_rewards) >= 10:
+            avg_reward = sum(self.episode_rewards) / len(self.episode_rewards)
+            reward_threshold = self.reward_threshold
+            
+            # If performing well, increase difficulty faster
+            if avg_reward > reward_threshold * 1.5:
+                # Doing very well, can handle more difficulty
+                reward_bonus = 0.1
+            elif avg_reward > reward_threshold:
+                # Meeting threshold, gradual increase
+                reward_bonus = 0.05
+            else:
+                # Below threshold, slow down or decrease difficulty
+                reward_bonus = -0.02
+            
+            # Combine time-based and reward-based
+            self.current_difficulty = min(
+                max(time_based_difficulty + reward_bonus, 0.0),
+                self.max_difficulty
+            )
+        else:
+            # Just use time-based if not enough data
+            self.current_difficulty = time_based_difficulty
+        
+        # Log curriculum updates periodically
+        if timestep % 10000 == 0:
+            logging.info(
+                f"📚 Curriculum update at step {timestep:,}: "
+                f"difficulty={self.current_difficulty:.3f} "
+                f"(target: {self.max_difficulty:.3f})"
+            )
+    
     def _init_metrics(self):
         
         self.episode_metrics = {

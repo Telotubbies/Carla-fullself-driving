@@ -26,16 +26,16 @@ environment:
   carla_host: localhost
   carla_port: 2000
   curriculum_learning:
-    difficulty_increase_rate: 0.005
-    enable_traffic: false
+    difficulty_increase_rate: 0.002  # Slower increase for gradual learning
+    enable_traffic: false  # Start without traffic, enable later
     enabled: true
-    initial_difficulty: 0.0
-    max_difficulty: 1.0
-    num_pedestrians: [0, 5]
-    num_vehicles: [0, 10]
-    reward_based: true
-    reward_threshold: 10.0
-    reward_window_size: 50
+    initial_difficulty: 0.0  # Start very easy (no obstacles)
+    max_difficulty: 1.0  # Gradually reach full difficulty
+    num_pedestrians: [0, 10]  # Start with 0, gradually increase to 10
+    num_vehicles: [0, 15]  # Start with 0, gradually increase to 15
+    reward_based: true  # Increase difficulty when performing well
+    reward_threshold: 200.0  # Increase difficulty when avg reward > 200
+    reward_window_size: 50  # Use last 50 episodes for average
   domain_randomization:
     enabled: true
     spawn_randomization: true
@@ -77,10 +77,10 @@ environment:
       sun_altitude_range: [0.0, 90.0]  # Full day cycle
       wetness_range: [0.0, 100.0]
     weather_randomization: true  # Enable weather randomization for robustness
-  enable_traffic: true  # Enable traffic for obstacle avoidance training
+  enable_traffic: false  # Will be enabled gradually via curriculum learning
   no_rendering_mode: true
-  num_pedestrians: 10  # Add pedestrians for obstacle avoidance
-  num_vehicles: 15     # Add vehicles for obstacle avoidance
+  num_pedestrians: 0  # Start with 0, curriculum will increase gradually
+  num_vehicles: 0  # Start with 0, curriculum will increase gradually
   timeout: 60.0  # Increased from 20.0 to allow longer episodes for better learning
   town: Town01_Opt
   vehicle:
