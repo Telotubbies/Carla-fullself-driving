@@ -86,6 +86,7 @@ class CarlaRLEnv(gym.Env):
         self._init_metrics()
         self._init_augmentations()
         self._init_lane_detector()
+        self._init_normalization()
         self._setup_spaces()
         self._clear_buffers()
     def _configure_port(self, port: Optional[int]):
@@ -153,6 +154,30 @@ class CarlaRLEnv(gym.Env):
             else:
                 logging.warning("⚠️ Vision waypoint requested but LaneDetector missing. Fallback to CARLA API.")
             self.use_vision_waypoint = False
+    
+    def _init_normalization(self):
+        """Initialize normalization parameters"""
+        # CARLA world is typically ~2000m x 2000m, but can be larger
+        # Use conservative range for normalization
+        self.gps_max_range = 2500.0  # meters (covers most CARLA towns)
+        self.goal_max_range = 2500.0  # meters
+        self.distance_max_range = 5000.0  # meters (max reasonable goal distance)
+        
+        # Data quality tracking
+        self.data_quality_metrics = {
+            'invalid_obs_count': 0,
+            'outlier_count': 0,
+            'nan_count': 0,
+            'inf_count': 0,
+            'total_obs_count': 0
+        }
+        
+        # Enable data validation
+        self.enable_data_validation = self.obs_config.get("enable_data_validation", True)
+        self.enable_outlier_detection = self.obs_config.get("enable_outlier_detection", True)
+        
+        logging.info(f"✅ Normalization initialized: GPS/Goal max_range={self.gps_max_range}m")
+        logging.info(f"✅ Data validation: {self.enable_data_validation}, Outlier detection: {self.enable_outlier_detection}")
     def _setup_spaces(self):
         
         image_size = self.obs_config.get("image_size", [160, 90])
@@ -167,10 +192,10 @@ class CarlaRLEnv(gym.Env):
         if is_dict_obs:
             space_dict = {"vision": spaces.Box(low=0.0, high=1.0, shape=vision_shape, dtype=np.float32)}
             if self.use_gps:
-                space_dict["gps"] = spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32)
+                space_dict["gps"] = spaces.Box(low=-1.0, high=1.0, shape=(3,), dtype=np.float32)  # Normalized
             if self.use_goal:
-                space_dict["goal"] = spaces.Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float32)  # Added relative_angle
-                space_dict["distance_to_goal"] = spaces.Box(low=0.0, high=np.inf, shape=(1,), dtype=np.float32)
+                space_dict["goal"] = spaces.Box(low=-1.0, high=1.0, shape=(4,), dtype=np.float32)  # Normalized [x, y, z, relative_angle]
+                space_dict["distance_to_goal"] = spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32)  # Normalized [0, 1]
             if self.use_waypoint:
                 space_dict["waypoint"] = spaces.Box(low=-1.0, high=1.0, shape=(8,), dtype=np.float32)
             if self.use_velocity:
@@ -722,6 +747,120 @@ class CarlaRLEnv(gym.Env):
             logging.error(f"World tick failed after {retries} retries: {error}")
             return False
         return False
+    
+    def _normalize_gps(self, gps: np.ndarray) -> np.ndarray:
+        """Normalize GPS coordinates to [-1, 1] range"""
+        if gps is None:
+            return np.zeros((3,), dtype=np.float32)
+        normalized = np.clip(gps / self.gps_max_range, -1.0, 1.0)
+        return normalized.astype(np.float32)
+    
+    def _normalize_goal(self, goal: np.ndarray) -> np.ndarray:
+        """Normalize goal coordinates to [-1, 1] range"""
+        if goal is None or len(goal) < 3:
+            return np.zeros((4,), dtype=np.float32)
+        # Normalize x, y, z coordinates
+        goal_pos = goal[:3]
+        normalized_pos = np.clip(goal_pos / self.goal_max_range, -1.0, 1.0)
+        # Keep relative_angle as is (already normalized to [-1, 1])
+        if len(goal) >= 4:
+            relative_angle = goal[3]
+        else:
+            relative_angle = 0.0
+        return np.concatenate([normalized_pos, [relative_angle]]).astype(np.float32)
+    
+    def _normalize_distance(self, distance: float) -> float:
+        """Normalize distance to [0, 1] range"""
+        if distance is None:
+            return 0.0
+        normalized = np.clip(distance / self.distance_max_range, 0.0, 1.0)
+        return float(normalized)
+    
+    def _validate_observation(self, obs: Dict) -> Tuple[bool, Optional[str]]:
+        """Validate observation data quality"""
+        if not self.enable_data_validation:
+            return True, None
+        
+        self.data_quality_metrics['total_obs_count'] += 1
+        
+        # Check for NaN/Inf in all observations
+        for key, value in obs.items():
+            if isinstance(value, np.ndarray):
+                if np.any(np.isnan(value)):
+                    self.data_quality_metrics['nan_count'] += 1
+                    return False, f"NaN detected in {key}"
+                if np.any(np.isinf(value)):
+                    self.data_quality_metrics['inf_count'] += 1
+                    return False, f"Inf detected in {key}"
+        
+        # Check GPS range (should be normalized to [-1, 1] now)
+        if "gps" in obs:
+            gps = obs["gps"]
+            if np.any(np.abs(gps) > 1.5):  # Allow small margin for normalized values
+                self.data_quality_metrics['outlier_count'] += 1
+                return False, f"GPS out of normalized range: {gps}"
+        
+        # Check goal range
+        if "goal" in obs:
+            goal = obs["goal"]
+            if len(goal) >= 3:
+                goal_pos = goal[:3]
+                if np.any(np.abs(goal_pos) > 1.5):  # Allow small margin
+                    self.data_quality_metrics['outlier_count'] += 1
+                    return False, f"Goal position out of normalized range: {goal_pos}"
+        
+        # Check velocity range (should be normalized to [-1, 1])
+        if "velocity" in obs:
+            vel = obs["velocity"]
+            if np.any(np.abs(vel) > 1.5):  # Allow small margin
+                self.data_quality_metrics['outlier_count'] += 1
+                return False, f"Velocity out of normalized range: {vel}"
+        
+        return True, None
+    
+    def _detect_outliers(self, obs: Dict) -> Dict[str, bool]:
+        """Detect outliers in observation data using statistical methods"""
+        outliers = {}
+        
+        if not self.enable_outlier_detection:
+            return outliers
+        
+        # GPS outliers (using 3-sigma rule on normalized values)
+        if "gps" in obs:
+            gps = obs["gps"]
+            mean = np.mean(gps)
+            std = np.std(gps)
+            if std > 0:
+                outliers["gps"] = np.any(np.abs(gps - mean) > 3 * std)
+            else:
+                outliers["gps"] = False
+        
+        # Velocity outliers
+        if "velocity" in obs:
+            vel = obs["velocity"]
+            mean = np.mean(vel)
+            std = np.std(vel)
+            if std > 0:
+                outliers["velocity"] = np.any(np.abs(vel - mean) > 3 * std)
+            else:
+                outliers["velocity"] = False
+        
+        return outliers
+    
+    def _log_data_quality(self):
+        """Log data quality metrics periodically"""
+        if self.step_count % 1000 == 0 and self.data_quality_metrics['total_obs_count'] > 0:
+            total = self.data_quality_metrics['total_obs_count']
+            invalid_rate = (self.data_quality_metrics['invalid_obs_count'] / total) * 100
+            outlier_rate = (self.data_quality_metrics['outlier_count'] / total) * 100
+            nan_rate = (self.data_quality_metrics['nan_count'] / total) * 100
+            
+            if invalid_rate > 0.1 or outlier_rate > 0.1 or nan_rate > 0.1:
+                logging.warning(
+                    f"⚠️ Data quality issues: Invalid={invalid_rate:.2f}%, "
+                    f"Outliers={outlier_rate:.2f}%, NaN={nan_rate:.2f}%"
+                )
+    
     def _compute_observation(self) -> Any:
         
         start = time.time()
@@ -745,12 +884,17 @@ class CarlaRLEnv(gym.Env):
             vision = np.concatenate([rgb_stack, depth_stack], axis=-1)
         if isinstance(self.observation_space, spaces.Dict):
             obs = {"vision": vision.astype(np.float32)}
+            
+            # GPS with normalization
             if self.use_gps:
-                obs["gps"] = (
+                gps_raw = (
                     self.current_gps_location
                     if self.current_gps_location is not None
                     else np.zeros((3,), dtype=np.float32)
                 )
+                obs["gps"] = self._normalize_gps(gps_raw)
+            
+            # Goal with normalization
             if self.use_goal:
                 if self.goal_location and self.vehicle:
                     goal_pos = np.array([self.goal_location.x, self.goal_location.y, self.goal_location.z])
@@ -767,12 +911,14 @@ class CarlaRLEnv(gym.Env):
                         relative_angle_norm = np.clip(relative_angle / np.pi, -1, 1)
                     else:
                         relative_angle_norm = 0.0
-                    obs["goal"] = np.concatenate([goal_pos, [relative_angle_norm]])  # 4D: [x, y, z, relative_angle]
+                    goal_raw = np.concatenate([goal_pos, [relative_angle_norm]])  # 4D: [x, y, z, relative_angle]
+                    obs["goal"] = self._normalize_goal(goal_raw)
                 else:
-                    obs["goal"] = np.zeros(4)  # 4D instead of 3D
-                obs["distance_to_goal"] = (
-                    np.array([self.distance_to_goal]) if self.distance_to_goal else np.array([0.0])
-                )
+                    obs["goal"] = np.zeros(4, dtype=np.float32)  # 4D: normalized zeros
+                
+                # Normalize distance to goal
+                distance_raw = self.distance_to_goal if self.distance_to_goal else 0.0
+                obs["distance_to_goal"] = np.array([self._normalize_distance(distance_raw)], dtype=np.float32)
             if self.use_waypoint:
                 obs["waypoint"] = self._get_waypoint_features()
             if self.use_velocity:
@@ -785,6 +931,24 @@ class CarlaRLEnv(gym.Env):
             if not hasattr(self, 'last_yaw') and self.vehicle:
                 t = self.vehicle.get_transform()
                 self.last_yaw = np.radians(t.rotation.yaw)
+            
+            # Validate observation data quality
+            is_valid, error_msg = self._validate_observation(obs)
+            if not is_valid:
+                self.data_quality_metrics['invalid_obs_count'] += 1
+                if self.step_count % 100 == 0:  # Log periodically to avoid spam
+                    logging.warning(f"⚠️ Invalid observation at step {self.step_count}: {error_msg}")
+                # Return zero observation instead of invalid data
+                return self._get_zero_observation()
+            
+            # Detect outliers (log only, don't reject)
+            outliers = self._detect_outliers(obs)
+            if any(outliers.values()) and self.step_count % 500 == 0:
+                logging.debug(f"Outliers detected: {outliers}")
+            
+            # Log data quality metrics periodically
+            self._log_data_quality()
+            
             if self.step_count % 50 == 0 and rgb is not None:
                 self._save_snapshot(rgb)
             return obs
