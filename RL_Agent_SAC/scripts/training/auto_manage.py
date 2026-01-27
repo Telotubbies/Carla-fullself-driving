@@ -214,11 +214,29 @@ def check_training_progress(log_file: str, last_step: int, last_check_time: floa
     return (is_progressing, current_step, has_error)
 def check_training_health(last_step: dict, last_check_time: dict):
     
+    # Try multiple patterns to find training process
     train_procs = find_processes("train_sac.py")
     if not train_procs:
+        # Also try alternative patterns
+        train_procs = find_processes("train_sac")
+        if not train_procs:
+            train_procs = find_processes("training/train_sac")
+    
+    if not train_procs:
+        logger.debug("No training process found with any pattern")
         return (False, True, "No training process found")
-    active_procs = [p for p in train_procs if p.is_running()]
+    
+    # Filter active processes with better error handling
+    active_procs = []
+    for p in train_procs:
+        try:
+            if p.is_running() and p.status() != psutil.STATUS_ZOMBIE:
+                active_procs.append(p)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
+            continue
+    
     if not active_procs:
+        logger.debug(f"Found {len(train_procs)} training process(es) but none are active")
         return (False, True, "No active training processes (zombie)")
     for proc in active_procs:
         try:
@@ -497,8 +515,21 @@ def monitor_loop():
                 if time_since_restart < RESTART_COOLDOWN:
                     logger.info(f"Skipping restart (cooldown: {RESTART_COOLDOWN - time_since_restart:.0f}s remaining)")
                 elif carla_ok:
+                    # Double-check with multiple patterns before restarting
                     train_procs = find_processes("train_sac.py")
-                    active_procs = [p for p in train_procs if p.is_running()] if train_procs else []
+                    if not train_procs:
+                        train_procs = find_processes("train_sac")
+                    if not train_procs:
+                        train_procs = find_processes("training/train_sac")
+                    
+                    active_procs = []
+                    for p in train_procs:
+                        try:
+                            if p.is_running() and p.status() != psutil.STATUS_ZOMBIE:
+                                active_procs.append(p)
+                        except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
+                            continue
+                    
                     if not active_procs:
                         logger.warning(f"Training unhealthy: {reason}. Restarting...")
                         start_training()
@@ -506,7 +537,7 @@ def monitor_loop():
                         last_step.clear()
                         last_check_time.clear()
                     else:
-                        logger.info(f"Training unhealthy but {len(active_procs)} active process(es) found. Monitoring...")
+                        logger.info(f"Training unhealthy but {len(active_procs)} active process(es) found (PIDs: {[p.pid for p in active_procs]}). Monitoring...")
                 else:
                     logger.warning("Skipping training restart because CARLA is down.")
             if not dashboard_ok:
