@@ -506,18 +506,54 @@ def setup_callbacks(config: dict, dirs: dict, eval_env=None, sqlite_manager=None
     if save_format != 'old':
         callbacks.append(checkpoint_callback)
     eval_config = config.get('training', {})
-    if eval_env is not None and eval_config.get('eval_freq', 0) > 0:
-        eval_callback = EvalCallback(
+    eval_freq = eval_config.get('eval_freq', 0)
+    if eval_env is not None and eval_freq > 0:
+        # Custom EvalCallback that handles resume properly and forces evaluation
+        class ResumeAwareEvalCallback(EvalCallback):
+            """EvalCallback that works correctly with resume_from_checkpoint"""
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.last_eval_timestep = 0
+                self.initial_timestep = None
+                self.force_first_eval = True  # Force evaluation on first step after resume
+            
+            def _on_training_start(self) -> None:
+                """Called when training starts - capture initial timestep"""
+                super()._on_training_start()
+                self.initial_timestep = self.num_timesteps
+                # If resuming, log the situation
+                if self.initial_timestep > 0:
+                    next_eval = ((self.initial_timestep // self.eval_freq) + 1) * self.eval_freq
+                    logging.info(f"🔄 Resuming evaluation: current step={self.initial_timestep}, next eval at {next_eval}")
+                    # Force evaluation if we're close to next eval boundary (within 1000 steps)
+                    if (next_eval - self.initial_timestep) <= 1000:
+                        self.force_first_eval = True
+                        logging.info(f"   Will force evaluation at step {next_eval}")
+            
+            def _on_step(self) -> bool:
+                """Override to handle resume case - ensure evaluation happens"""
+                # Force first evaluation if needed (for resume case)
+                if self.force_first_eval and self.num_timesteps >= ((self.initial_timestep // self.eval_freq) + 1) * self.eval_freq:
+                    self.force_first_eval = False
+                    logging.info(f"🔍 Forcing evaluation at step {self.num_timesteps} (resume case)")
+                    return super()._on_step()
+                
+                # Normal evaluation check
+                if self.num_timesteps - self.last_eval_timestep >= self.eval_freq:
+                    return super()._on_step()
+                return True
+        
+        eval_callback = ResumeAwareEvalCallback(
             eval_env,
             best_model_save_path=os.path.join(dirs['checkpoints'], 'best_model'),
             log_path=os.path.join(dirs['logs'], 'evaluations'),
-            eval_freq=eval_config.get('eval_freq', 50000),
+            eval_freq=eval_freq,
             n_eval_episodes=eval_config.get('eval_episodes', 10),
             deterministic=True,
             render=False
         )
         callbacks.append(eval_callback)
-        logging.info(f"✅ Evaluation callback enabled: eval every {eval_config.get('eval_freq', 50000)} steps")
+        logging.info(f"✅ Evaluation callback enabled: eval every {eval_freq} steps, {eval_config.get('eval_episodes', 10)} episodes per eval")
     if sqlite_manager is not None:
         class SQLiteCheckpointCallback(BaseCallback):
             def __init__(self, sqlite_manager, save_freq, verbose=0):

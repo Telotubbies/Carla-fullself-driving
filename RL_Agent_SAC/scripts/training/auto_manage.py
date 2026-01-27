@@ -427,9 +427,34 @@ def start_dashboard():
             logger.warning(f"Dashboard started but not responding on port {DASHBOARD_PORT}.")
     except Exception as e:
         logger.error(f"Failed to launch dashboard: {e}")
+def check_and_disable_sleep():
+    """Check and warn about sleep/suspend settings"""
+    try:
+        # Check GNOME power settings
+        result = subprocess.run(
+            ["gsettings", "get", "org.gnome.settings-daemon.plugins.power", "sleep-inactive-ac-timeout"],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+        if result.returncode == 0:
+            timeout = result.stdout.strip()
+            if timeout != "0":
+                logger.warning(f"⚠️  Sleep timeout is set to {timeout} seconds (not disabled)")
+                logger.warning(f"   Computer will sleep after {int(timeout)} seconds of inactivity!")
+                logger.info("   Run: ./scripts/fix_power_management.sh to disable sleep")
+        else:
+            logger.debug("Could not check GNOME power settings (may not be in GUI session)")
+    except Exception as e:
+        logger.debug(f"Could not check sleep settings: {e}")
+
 def monitor_loop():
     
     logger.info("🚀 SAC Auto Management Started (Rewritten Version)")
+    
+    # Check power management settings on startup
+    check_and_disable_sleep()
+    
     with open(PID_FILE, 'w') as f:
         f.write(str(os.getpid()))
     logger.info("Initial startup: Starting CARLA...")

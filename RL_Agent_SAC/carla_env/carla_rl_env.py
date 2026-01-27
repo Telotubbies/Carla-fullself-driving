@@ -1333,6 +1333,11 @@ class CarlaRLEnv(gym.Env):
             except:
                 pass
         
+        # Episode length bonus - encourage longer episodes
+        episode_length_bonus = self.reward_config.get("episode_length_bonus", 0.0)
+        if episode_length_bonus > 0:
+            reward += episode_length_bonus
+        
         if self.progressive_rewards_enabled:
             reward *= self.reward_scale
         return reward

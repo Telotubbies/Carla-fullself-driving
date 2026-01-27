@@ -81,7 +81,7 @@ environment:
   no_rendering_mode: true
   num_pedestrians: 0  # Start with 0, curriculum will increase gradually
   num_vehicles: 0  # Start with 0, curriculum will increase gradually
-  timeout: 60.0  # Increased from 20.0 to allow longer episodes for better learning
+  timeout: 60.0  # Episode timeout in seconds
   town: Town01_Opt
   vehicle:
     blueprint: vehicle.tesla.model3
@@ -156,12 +156,13 @@ observations:
 
 # 🎯 REWARD SHAPING - Optimized for SAC learning
 rewards:
-  # Positive rewards (increased to encourage faster learning)
-  lane_center_reward: 10.0     # Increased to encourage lane keeping
-  speed_reward: 4.0            # Increased to encourage proper speed
-  progress_reward: 6.0         # Increased significantly to encourage longer episodes
-  smooth_steering_reward: 2.0  # Increased from 1.0
-  goal_reached_reward: 1000.0  # Increased to make goal reaching more rewarding
+  # Positive rewards (increased to encourage faster learning and longer episodes)
+  lane_center_reward: 12.0     # Increased from 10.0 to encourage lane keeping
+  speed_reward: 5.0            # Increased from 4.0 to encourage proper speed
+  progress_reward: 8.0         # Increased from 6.0 to encourage longer episodes
+  smooth_steering_reward: 2.5  # Increased from 2.0
+  goal_reached_reward: 1000.0  # Large reward for reaching goal
+  episode_length_bonus: 0.1    # Bonus reward per step to encourage longer episodes
   
   # Penalties (adjusted to be less harsh but still effective)
   collision_penalty: -15.0     # Reduced from -20.0 to be less harsh
@@ -227,24 +228,24 @@ training:
     enabled: false
     min_reward: 50.0
     patience: 100000
-  eval_episodes: 10
-  eval_freq: 50000
+  eval_episodes: 5        # Number of episodes per evaluation
+  eval_freq: 10000        # Evaluate every 10k steps so validation appears sooner
   
   # 🎯 SAC-SPECIFIC HYPERPARAMETERS
   # SAC is off-policy, so it can learn from old experiences
   # Optimized for vision-based autonomous driving
   sac:
-    # Learning rate - Balanced for vision-based RL (not too high to avoid instability)
-    learning_rate: 0.0003      # Standard for vision-based RL (stable learning)
+    # Learning rate - Increased 10x to learn much faster and improve rewards
+    learning_rate: 0.005       # Increased 10x from 0.0005 for much faster learning
     lr_schedule:
       type: linear
-      initial_lr: 0.0003       # Start with standard LR
-      final_lr: 0.00005        # Decay to lower LR for fine-tuning
+      initial_lr: 0.005         # Start with 10x higher LR for much faster initial learning
+      final_lr: 0.001          # Decay to lower LR for fine-tuning (also 10x higher)
       total_steps: 500000
     
     # Replay buffer - Large buffer for off-policy learning
     buffer_size: 250000        # Large buffer to store diverse experiences
-    learning_starts: 2000      # Collect diverse experiences before training starts
+    learning_starts: 1000      # Reduced from 2000 to start training earlier
     batch_size: 256            # Batch size for training (good for vision)
     
     # Soft update (target network) - Balanced for stability
@@ -254,9 +255,9 @@ training:
     # Discount factor
     gamma: 0.99                # Standard for long-horizon tasks
     
-    # Training frequency - Balanced for stability and efficiency
+    # Training frequency - Increased to learn faster
     train_freq: 4              # Train every 4 steps (balanced: not too frequent, not too sparse)
-    gradient_steps: 1          # 1 gradient step per update (standard, prevents overfitting)
+    gradient_steps: 2          # Increased from 1 to 2 for faster learning (more gradient updates)
     
     # Entropy coefficient (automatic tuning)
     ent_coef: 'auto'           # 'auto' for automatic entropy tuning

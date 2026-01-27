@@ -73,3 +73,17 @@ export interface MetricsHistoryItem {
   timestamp: string;
 }
 
+export interface EvaluationReport {
+  timestep: number;
+  mean_reward: number;
+  std_reward?: number;
+  mean_length?: number;
+  timestamp?: string;
+}
+
+export interface EvaluationsResponse {
+  latest: EvaluationReport | null;
+  history: EvaluationReport[];
+}
+
+

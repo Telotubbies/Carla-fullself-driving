@@ -530,18 +530,64 @@ async def get_evaluations():
     eval_dir = LOG_DIR / "evaluations"
     if not eval_dir.exists():
         return {"latest": None, "history": []}
+
+    # First, try JSON reports if they exist (backward compatibility)
     reports = []
     for f in eval_dir.glob("eval_report_*.json"):
         try:
             with open(f, 'r') as fp:
                 data = json.load(fp)
                 reports.append(data)
-        except: pass
-    reports.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-    return {
-        "latest": reports[0] if reports else None,
-        "history": reports[:5]
-    }
+        except Exception:
+            pass
+
+    if reports:
+        reports.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        return {
+            "latest": reports[0] if reports else None,
+            "history": reports[:5]
+        }
+
+    # Fallback: parse Stable-Baselines3 evaluations.npz
+    npz_path = eval_dir / "evaluations.npz"
+    if not npz_path.exists():
+        return {"latest": None, "history": []}
+
+    try:
+        import numpy as np
+        data = np.load(npz_path, allow_pickle=True)
+        timesteps = data.get("timesteps", [])
+        results = data.get("results", [])
+        ep_lengths = data.get("ep_lengths", [])
+
+        history = []
+        for idx in range(len(timesteps)):
+            ts = int(timesteps[idx])
+            rewards_arr = results[idx]
+            lengths_arr = ep_lengths[idx] if len(ep_lengths) > idx else None
+
+            mean_reward = float(np.mean(rewards_arr)) if len(rewards_arr) > 0 else 0.0
+            std_reward = float(np.std(rewards_arr)) if len(rewards_arr) > 0 else 0.0
+            mean_length = float(np.mean(lengths_arr)) if lengths_arr is not None and len(lengths_arr) > 0 else None
+
+            history.append({
+                "timestep": ts,
+                "mean_reward": mean_reward,
+                "std_reward": std_reward,
+                "mean_length": mean_length,
+                "timestamp": None,
+            })
+
+        history.sort(key=lambda x: x["timestep"])
+        latest = history[-1] if history else None
+
+        return {
+            "latest": latest,
+            "history": history[-10:],  # last 10 evals
+        }
+    except Exception as e:
+        print(f"Error parsing evaluations.npz: {e}")
+        return {"latest": None, "history": []}
 if __name__ == '__main__':
     import uvicorn
     print("=" * 70)

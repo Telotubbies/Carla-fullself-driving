@@ -6,7 +6,7 @@ import { api } from '../../services/api';
 import StatusCard from './StatusCard';
 import MetricsCard from './MetricsCard';
 import SystemResourcesCard from './SystemResourcesCard';
-import TrainingChart from './TrainingChart';
+import RewardAndValidationCard from './RewardAndValidationCard';
 import CheckpointAndLogsCard from './CheckpointAndLogsCard';
 
 function DashboardContent() {
@@ -42,7 +42,7 @@ function DashboardContent() {
           <StatusCard status={status} />
         </Box>
 
-        {/* Second Row: Metrics, System Resources & Training Chart */}
+        {/* Second Row: Metrics, System Resources & Reward/Validation */}
         <Box sx={{ gridColumn: { xs: '1', md: '1 / 4' } }}>
           <MetricsCard metrics={status.metrics} />
         </Box>
@@ -50,7 +50,7 @@ function DashboardContent() {
           <SystemResourcesCard system={status.system} power={status.power} />
         </Box>
         <Box sx={{ gridColumn: { xs: '1', md: '7 / 13' } }}>
-          <TrainingChart />
+          <RewardAndValidationCard />
         </Box>
 
         {/* Bottom Row: Checkpoint & Logs (scrollable) */}

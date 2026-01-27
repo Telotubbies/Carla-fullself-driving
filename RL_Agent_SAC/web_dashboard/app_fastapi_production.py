@@ -460,10 +460,34 @@ async def api_checkpoints(request: Request):
 async def api_metrics_history(request: Request):
     """Get training metrics history"""
     try:
+        # Clear cache for this endpoint to get fresh data
+        cache_key = "api_metrics_history"
+        if cache_key in cache:
+            del cache[cache_key]
+        
         loop = asyncio.get_event_loop()
-        log_file = await loop.run_in_executor(None, get_latest_training_log)
+        
+        # Get the latest training log file (prioritize rl_training_new.log but also check latest sac_training logs)
+        LOG_DIR = BASE_DIR / "logs"
+        rl_training_log = LOG_DIR / "rl_training_new.log"
+        log_file = None
+        
+        # Check for latest sac_training log (may have more recent data)
+        sac_logs = list(LOG_DIR.glob("sac_training_*.log"))
+        latest_sac_log = max(sac_logs, key=lambda p: p.stat().st_mtime) if sac_logs else None
+        
+        # Use latest sac_training log if it's newer and has data, otherwise use rl_training_new.log
+        if latest_sac_log and latest_sac_log.stat().st_mtime > rl_training_log.stat().st_mtime if rl_training_log.exists() else 0:
+            log_file = latest_sac_log
+            logger.info(f"Using latest sac_training log: {latest_sac_log.name}")
+        elif rl_training_log.exists():
+            log_file = rl_training_log
+            logger.info(f"Using rl_training_new.log for complete reward history")
+        else:
+            log_file = await loop.run_in_executor(None, get_latest_training_log)
         
         if not log_file or not log_file.exists():
+            logger.warning(f"Log file not found, using checkpoints")
             checkpoints = await loop.run_in_executor(None, get_all_checkpoints)
             result = [{
                 'step': c['timestep'],
@@ -472,6 +496,8 @@ async def api_metrics_history(request: Request):
             } for c in checkpoints]
             return result
         
+        logger.info(f"Parsing history from log file: {log_file.name}")
+        
         def parse_history_from_log(log_file):
             import re
             timesteps = []
@@ -479,24 +505,42 @@ async def api_metrics_history(request: Request):
             episodes = []
             dates = []
             try:
-                with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
-                    lines = f.readlines()
-                    for line in lines:
-                        if 'Callback: Step' in line and 'Episode reward:' in line:
-                            step_match = re.search(r'Callback: Step (\d+)', line)
-                            reward_match = re.search(r'Episode reward:\s*([-\d.]+)', line)
-                            length_match = re.search(r'Episode length:\s*(\d+)', line)
-                            if step_match and reward_match:
-                                timestep = int(step_match.group(1))
-                                reward = float(reward_match.group(1))
-                                episode_length = int(length_match.group(1)) if length_match else 0
-                                timesteps.append(timestep)
-                                rewards.append(reward)
-                                episodes.append(episode_length)
-                                date_match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
-                                dates.append(date_match.group(1) if date_match else None)
+                logger.info(f"Reading log file: {log_file} (size: {log_file.stat().st_size / (1024*1024):.2f} MB)")
+                
+                # Read ALL log files to get complete history
+                sac_logs = list(LOG_DIR.glob("sac_training_*.log"))
+                rl_logs = [LOG_DIR / "rl_training_new.log"] if (LOG_DIR / "rl_training_new.log").exists() else []
+                log_files = list(set([log_file] + rl_logs + sac_logs))  # Remove duplicates
+                logger.info(f"Reading {len(log_files)} log files for complete history")
+                
+                # Read all log files
+                for lf in log_files:
+                    with open(lf, 'r', encoding='utf-8', errors='ignore') as f:
+                        line_count = 0
+                        matched_count = 0
+                        
+                        for line in f:
+                            line_count += 1
+                            if 'Callback: Step' in line and 'Episode reward:' in line:
+                                step_match = re.search(r'Callback: Step (\d+)', line)
+                                reward_match = re.search(r'Episode reward:\s*([-\d.]+)', line)
+                                length_match = re.search(r'Episode length:\s*(\d+)', line)
+                                if step_match and reward_match:
+                                    timestep = int(step_match.group(1))
+                                    reward = float(reward_match.group(1))
+                                    episode_length = int(length_match.group(1)) if length_match else 0
+                                    timesteps.append(timestep)
+                                    rewards.append(reward)
+                                    episodes.append(episode_length)
+                                    date_match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
+                                    dates.append(date_match.group(1) if date_match else None)
+                                    matched_count += 1
+                        
+                        logger.info(f"Parsed {matched_count} records from {lf.name}")
+                    
+                    logger.info(f"Parsed {matched_count} reward records from {line_count} total lines")
             except Exception as e:
-                logger.error(f"Error parsing history: {e}")
+                logger.error(f"Error parsing history: {e}", exc_info=True)
                 checkpoints = get_all_checkpoints()
                 timesteps = [c['timestep'] for c in checkpoints]
                 rewards = [c['reward'] if c['reward'] else 0 for c in checkpoints]
@@ -504,8 +548,10 @@ async def api_metrics_history(request: Request):
                 dates = [c['created_at'] for c in checkpoints]
             
             if timesteps:
+                # Sort by timestep
                 sorted_data = sorted(zip(timesteps, rewards, episodes, dates))
                 timesteps, rewards, episodes, dates = zip(*sorted_data)
+                # Return all records (no limit) to show complete history up to 90k+
                 return {
                     'timesteps': list(timesteps),
                     'rewards': list(rewards),
@@ -515,11 +561,32 @@ async def api_metrics_history(request: Request):
             return {'timesteps': [], 'rewards': [], 'episodes': [], 'dates': []}
         
         history = await loop.run_in_executor(None, parse_history_from_log, log_file)
+        
+        # Get current step from status to extend graph to actual current step
+        checkpoint = await loop.run_in_executor(None, get_latest_checkpoint)
+        current_metrics = await loop.run_in_executor(None, parse_training_metrics, log_file)
+        checkpoint_step = checkpoint.get('timestep', 0) if checkpoint else 0
+        metrics_step = current_metrics.get('current_step', 0) or 0
+        current_step = max(checkpoint_step, metrics_step)
+        
         result = [{
             'step': history['timesteps'][i],
             'reward': history['rewards'][i] if i < len(history['rewards']) else 0,
             'timestamp': history['dates'][i] if i < len(history['dates']) and history['dates'][i] else None
         } for i in range(len(history['timesteps']))]
+        
+        # If current step is beyond the last recorded step, add a placeholder point
+        if result and current_step > result[-1]['step']:
+            # Add current step point with last known reward (or 0)
+            last_reward = result[-1]['reward'] if result else 0
+            result.append({
+                'step': current_step,
+                'reward': last_reward,  # Use last known reward as placeholder
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
+            logger.info(f"Extended history to current step {current_step} (beyond log data)")
+        
+        logger.info(f"Returning {len(result)} reward history records (max step: {max([r['step'] for r in result]) if result else 0})")
         return result
     except Exception as e:
         logger.error(f"Error in api_metrics_history: {e}", exc_info=True)
@@ -610,6 +677,78 @@ async def api_auto_manage_log(request: Request):
         }
     except Exception as e:
         logger.error(f"Error reading auto-manage log: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/evaluations")
+@limiter.limit(API_RATE_LIMIT)
+async def api_evaluations(request: Request):
+    """Get evaluation (validation) metrics from Stable-Baselines3 EvalCallback"""
+    try:
+        LOG_DIR = BASE_DIR / "logs"
+        eval_dir = LOG_DIR / "evaluations"
+
+        if not eval_dir.exists():
+            return {"latest": None, "history": []}
+
+        # Prefer JSON reports if they exist (backward compatibility)
+        reports = []
+        for f in eval_dir.glob("eval_report_*.json"):
+            try:
+                with open(f, 'r') as fp:
+                    data = json.load(fp)
+                    reports.append(data)
+            except Exception:
+                continue
+
+        if reports:
+            reports.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+            return {
+                "latest": reports[0] if reports else None,
+                "history": reports[:5],
+            }
+
+        # Fallback: parse Stable-Baselines3 evaluations.npz
+        npz_path = eval_dir / "evaluations.npz"
+        if not npz_path.exists():
+            return {"latest": None, "history": []}
+
+        import numpy as np
+
+        data = np.load(npz_path, allow_pickle=True)
+        timesteps = data.get("timesteps", [])
+        results = data.get("results", [])
+        ep_lengths = data.get("ep_lengths", [])
+
+        history = []
+        for idx in range(len(timesteps)):
+            ts = int(timesteps[idx])
+            rewards_arr = results[idx]
+            lengths_arr = ep_lengths[idx] if len(ep_lengths) > idx else None
+
+            mean_reward = float(np.mean(rewards_arr)) if len(rewards_arr) > 0 else 0.0
+            std_reward = float(np.std(rewards_arr)) if len(rewards_arr) > 0 else 0.0
+            mean_length = float(np.mean(lengths_arr)) if lengths_arr is not None and len(lengths_arr) > 0 else None
+
+            history.append(
+                {
+                    "timestep": ts,
+                    "mean_reward": mean_reward,
+                    "std_reward": std_reward,
+                    "mean_length": mean_length,
+                    "timestamp": None,
+                }
+            )
+
+        history.sort(key=lambda x: x["timestep"])
+        latest = history[-1] if history else None
+
+        return {
+            "latest": latest,
+            "history": history[-10:],  # last 10 evals
+        }
+    except Exception as e:
+        logger.error(f"Error in api_evaluations: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================================

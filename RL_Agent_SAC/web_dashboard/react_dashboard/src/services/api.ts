@@ -1,4 +1,10 @@
-import type { StatusResponse, LogResponse, SACTrainingLogResponse, MetricsHistoryItem } from '../types';
+import type {
+  StatusResponse,
+  LogResponse,
+  SACTrainingLogResponse,
+  MetricsHistoryItem,
+  EvaluationsResponse,
+} from '../types';
 
 const API_BASE = '/api';
 const API_TIMEOUT = 30000; // 30 seconds
@@ -95,6 +101,21 @@ export const api = {
       return handleResponse<MetricsHistoryItem[]>(response);
     } catch (error) {
       console.error('API getMetricsHistory error:', error);
+      throw error;
+    }
+  },
+
+  async getEvaluations(): Promise<EvaluationsResponse> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE}/evaluations`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return handleResponse<EvaluationsResponse>(response);
+    } catch (error) {
+      console.error('API getEvaluations error:', error);
       throw error;
     }
   },
