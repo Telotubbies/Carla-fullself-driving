@@ -1,0 +1,1 @@
+scripts/entry_points/run_mpc_inference.sh

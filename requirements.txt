@@ -1,0 +1,34 @@
+# CARLA LSTM-MPC Autonomous Driving Requirements
+
+# Deep Learning
+# For ROCm (AMD GPU): Install from https://pytorch.org/get-started/locally/
+# Example: pip install torch torchvision --index-url https://download.pytorch.org/whl/rocm5.7
+# For CUDA: pip install torch torchvision
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Computer Vision
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# Optimization
+casadi>=3.6.0
+
+# Visualization
+pygame>=2.5.0
+matplotlib>=3.7.0
+
+# Configuration
+PyYAML>=6.0
+
+# Database (Optional - for storing training data)
+# Uncomment if using PostgreSQL:
+# psycopg2-binary>=2.9.0
+# SQLAlchemy>=2.0.0
+
+# CARLA Python API
+# Note: CARLA Python API should be installed from CARLA distribution
+# Add CARLA PythonAPI to PYTHONPATH:
+# export PYTHONPATH=$PYTHONPATH:/path/to/CARLA_0.9.16/PythonAPI/carla/dist/carla-0.9.16-py3.10-linux-x86_64.egg
+

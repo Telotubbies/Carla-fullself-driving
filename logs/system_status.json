@@ -1,0 +1,36 @@
+{
+  "last_updated": "2026-02-08T17:22:05.183949",
+  "data_pipeline": {
+    "image_count": 20000,
+    "mask_count": 20000,
+    "feature_size": "26.9M",
+    "data_dir": "/home/a/Desktop/CARLA_0.9.16/carla_lstm_mpc_project/data/autopilot_20260208_150902",
+    "updated_at": "2026-02-08T17:22:05.161717"
+  },
+  "models": {
+    "lstm": {
+      "exists": true,
+      "size": "5.0M",
+      "trained_at": "2026-02-08T15:35:06.141550",
+      "val_loss": null,
+      "path": "/home/a/Desktop/CARLA_0.9.16/carla_lstm_mpc_project/data/autopilot_20260208_150902/lstm_model/best_model.pth",
+      "updated_at": "2026-02-08T17:22:05.162078"
+    },
+    "resnet_lane": {
+      "exists": true,
+      "size": "42.7M",
+      "trained_at": "2026-02-08T16:46:55.108660",
+      "val_loss": null,
+      "path": "/home/a/Desktop/CARLA_0.9.16/carla_lstm_mpc_project/data/autopilot_20260208_150902/resnet_lane_model/resnet_lane_final.pth",
+      "updated_at": "2026-02-08T17:22:05.162397"
+    }
+  },
+  "training": {},
+  "system": {
+    "config_loaded": true,
+    "lstm_path": "data/autopilot_20260208_150902/lstm_model/best_model.pth",
+    "resnet_path": "data/autopilot_20260208_150902/resnet_lane_model/resnet_lane_final.pth",
+    "updated_at": "2026-02-08T17:22:05.183938"
+  },
+  "metrics": {}
+}

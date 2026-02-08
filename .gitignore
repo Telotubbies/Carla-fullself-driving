@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# CARLA
+*.log
+*.csv
+data/autopilot_*/
+data/diverse_*/
+logs/*.log
+logs/*.csv
+logs/old/
+logs/archived/
+logs/training/*.log
+logs/inference/*.log
+logs/flow/*.log
+
+# Models
+*.pth
+*.pt
+*.h5
+*.ckpt
+checkpoints/
+data/*/lstm_model/
+data/*/resnet_lane_model/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.bak
+*.old
+temp/
+tmp/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation builds
+docs/_build/
+docs/.doctrees/
