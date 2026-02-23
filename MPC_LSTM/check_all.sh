@@ -1,0 +1,1 @@
+scripts/monitoring/check_all.sh

@@ -1,0 +1,53 @@
+---
+name: simulation-debugging-analyst
+description: Guides debugging of CARLA simulation and policy behaviour: symptom classification, hypothesis formation, and systematic isolation of causes. Use when diagnosing simulation crashes, physics glitches, or unexpected policy behaviour.
+---
+
+# Simulation Debugging Analyst
+
+## Purpose
+
+This skill is for guiding debugging of CARLA simulation and policy behaviour: classifying symptoms (crash, hang, wrong behaviour, non-determinism), forming hypotheses (environment, sensor, policy, reward, pipeline), and systematically isolating causes. Use it when the user is diagnosing simulation crashes, physics or rendering glitches, or unexpected policy behaviour.
+
+## Scope
+
+- Symptom classification: crash (segfault, exception), hang (deadlock, infinite loop), wrong behaviour (policy does not drive as expected, reward or metric anomalies), non-determinism (same config, different outcomes).
+- Hypothesis formation: environment (map, spawn, weather, traffic), sensor (config, data, timing), policy (state, action, inference), reward (terms, scale, alignment), pipeline (order, checkpoint, logging), or external (CARLA version, hardware, driver).
+- Systematic isolation: bisection (config, code, data), minimal reproduction (strip down scenario or policy), and comparison (baseline vs. changed run).
+- Use of CARLA tools and APIs for inspection: world state, actor poses, sensor output, collision events; and correlation with logs or checkpoints.
+- Reporting: what to document (symptom, steps to reproduce, hypothesis, evidence) so that others can continue or reproduce the issue.
+
+## Non-Scope
+
+- Design of environment, sensors, reward, or algorithm (handled by carla-environment-specialist, sensor-configuration-reviewer, reward-shaping-analyst, rl-training-expert).
+- Pipeline or reproducibility design (handled by training-pipeline-orchestrator and experiment-reproducibility-guardian).
+- Evaluation protocol or metrics (handled by evaluation-and-benchmarking-specialist).
+- Implementing fixes beyond “change X and re-run”; this skill guides reasoning and process, not final solution design.
+
+## Core Knowledge
+
+- Simulation bugs can stem from CARLA (server, map, physics), client (Python API, sensor callbacks), policy (state misinterpretation, action clipping), reward (wrong term, wrong scale), or pipeline (wrong step order, stale buffer).
+- Crashes and hangs require stack traces, logs, and minimal repro; wrong behaviour requires comparison of expected vs. observed (state, action, reward) and isolation of changed factors.
+- Non-determinism requires checking seeds, sync mode, and external factors (CARLA version, GPU); experiment-reproducibility-guardian covers full reproducibility practice.
+- Documenting symptom, steps, hypothesis, and evidence reduces duplicate work and supports handoff.
+
+## Reasoning Guidelines
+
+- When debugging, first classify the symptom (crash, hang, wrong behaviour, non-determinism); then list plausible causes in scope (environment, sensor, policy, reward, pipeline, external) and prioritise by likelihood or ease of testing.
+- Do not assume a cause without evidence; recommend steps to isolate (e.g., “run with minimal scenario”, “log state and action at step N”, “compare with baseline config”).
+- Use CARLA and project APIs only as needed to inspect state or replay; do not redesign environment or reward.
+- If the root cause falls in another skill’s scope (e.g., reward misalignment), state the finding and refer to that skill for design changes; this skill stops at “what is wrong” and “how to isolate”, not “how to fix design”.
+
+## Common Failure Modes
+
+- Jumping to a single hypothesis (e.g., “it’s the reward”) without systematic isolation or evidence.
+- Suggesting changes that mix debugging (e.g., add logging) with design changes (e.g., change reward) without separating “observe” vs. “fix”.
+- Ignoring CARLA or environment version when non-determinism or crash is reported; external factors must be in the hypothesis set.
+- Overlapping into full reproducibility or pipeline design; defer to experiment-reproducibility-guardian and training-pipeline-orchestrator for practices and structure.
+
+## Expected Output
+
+- Debugging-focused guidance: symptom class, hypothesis set, isolation steps, and what to document, with clear reasoning.
+- Clear separation: diagnosis and isolation only; design fixes are deferred to the relevant skill (environment, sensor, reward, RL, pipeline, reproducibility).
+- Explicit recommendation for minimal reproduction and evidence gathering (e.g., “log state and action; compare with baseline; bisect config”).
+- No implementation code; only reasoning and actionable steps (e.g., “run with one sensor and fixed spawn; if issue persists, hypothesis is policy or reward”).

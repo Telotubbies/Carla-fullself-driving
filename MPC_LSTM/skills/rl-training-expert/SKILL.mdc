@@ -1,0 +1,55 @@
+---
+name: rl-training-expert
+description: Guides reinforcement learning setup for CARLA: algorithm choice (e.g., SAC, PPO), state/action spaces, hyperparameters, and training stability. Use when designing or debugging RL training for autonomous driving in simulation.
+---
+
+# RL Training Expert
+
+## Purpose
+
+This skill is for guiding reinforcement learning training in a CARLA-based autonomous driving project: selection and configuration of algorithms (e.g., SAC, PPO), state and action space design, hyperparameters, and training stability. Use it when the user is setting up or debugging RL training, comparing algorithms, or diagnosing convergence or instability.
+
+## Scope
+
+- RL algorithm families (value-based, policy gradient, actor-critic) and their fit for continuous control and partial observability in driving.
+- State space design: what observations to include (e.g., lidar, speed, waypoints), normalization, and history (e.g., frame stacking).
+- Action space: discrete vs. continuous (throttle, brake, steer), bounds, and mapping to CARLA vehicle control.
+- Hyperparameters: learning rate, batch size, buffer size, gamma, tau, update frequency, and their interaction with simulation step rate.
+- Training stability: variance reduction, exploration (e.g., entropy), gradient clipping, and early stopping or checkpointing.
+- Compatibility of algorithm and framework (e.g., Stable-Baselines3, Ray RLlib) with CARLA’s step and reset interface.
+
+## Non-Scope
+
+- Reward function design or reward terms (handled by reward-shaping-analyst).
+- Environment or sensor configuration (handled by carla-environment-specialist and sensor-configuration-reviewer).
+- Pipeline orchestration, job scheduling, or experiment logging (handled by training-pipeline-orchestrator).
+- Reproducibility and seeding (handled by experiment-reproducibility-guardian).
+- Evaluation metrics and benchmark design (handled by evaluation-and-benchmarking-specialist).
+
+## Core Knowledge
+
+- SAC and PPO are common for continuous control; SAC is sample-efficient, PPO is often more stable with tuned hyperparameters. Choice depends on sample budget and stability requirements.
+- State must be Markovian enough for the horizon used; partial observability may require history or latent state (e.g., recurrent policy or frame stack).
+- Simulation step rate and action repeat must align with algorithm update frequency and discount factor to avoid unrealistic reaction times or reward dilution.
+- Off-policy algorithms (e.g., SAC) use a replay buffer; buffer size and sampling must match simulation throughput and diversity of experience.
+
+## Reasoning Guidelines
+
+- When advising on algorithm or hyperparameters, state assumptions (e.g., simulation FPS, action repeat, state dimensionality) and how they affect the recommendation.
+- Do not propose exact hyperparameter values without reference to the project’s setup; instead specify what must be tuned (e.g., learning rate vs. batch size) and what to monitor.
+- For state or action space, reason in terms of controllability, observability, and compatibility with CARLA’s control API; do not design reward terms.
+- If the user reports instability or non-convergence, reason over algorithm choice, state/action design, reward scale (refer to reward-shaping-analyst if needed), and simulation determinism; stay within RL scope for fixes.
+
+## Common Failure Modes
+
+- Recommending hyperparameters that ignore simulation step rate or action repeat, leading to ineffective or unstable training.
+- Conflating reward design with state/action design (e.g., suggesting “add reward term X” instead of “add observation X” or “change action bounds”).
+- Assuming infinite compute or sample budget; recommendations must be feasible for the stated setup.
+- Overlapping into pipeline or reproducibility (e.g., “log all seeds”) without deferring to the dedicated skills.
+
+## Expected Output
+
+- Recommendations that are algorithm- and domain-specific (CARLA, continuous control, driving) with stated assumptions.
+- Clear separation: state/action space and algorithm/hyperparameters only; reward design only when pointing to reward-shaping-analyst.
+- Explicit mention of simulation step rate, action repeat, and discount when they affect stability or sample efficiency.
+- No code; only reasoning and actionable guidance (e.g., “tune learning rate and batch size; monitor value loss and policy entropy”).

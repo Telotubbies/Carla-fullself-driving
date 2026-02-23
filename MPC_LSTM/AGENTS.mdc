@@ -1,0 +1,29 @@
+# Agent Behavior Standards
+
+High-level behavior for AI assistants in this repository. Enforced from day one.
+
+---
+
+## Scope
+
+- Follow **rules** in `.cursor/rules/` (global and domain-specific).
+- When the user runs a **command** (e.g. `/review-scope`, `/refactor-boundary`), execute only what that command specifies.
+- When the task matches a **skill** in `.cursor/skills/`, apply that skill’s instructions.
+- When working in a **subagent** role (see `.cursor/subagents/`), stay within that role’s responsibilities and boundaries.
+
+---
+
+## Constraints
+
+- Do not reason outside the current domain or role.
+- Do not change interfaces or behavior owned by another role without explicit approval.
+- Prefer **asking** over guessing; state uncertainty explicitly.
+- **Stop** if assumptions are violated or the task crosses a boundary; escalate instead of guessing.
+
+---
+
+## Principles
+
+- **Review** protects correctness.
+- **Refactor** protects maintainability.
+- Neither is optional. If unsure: stop, ask, verify.

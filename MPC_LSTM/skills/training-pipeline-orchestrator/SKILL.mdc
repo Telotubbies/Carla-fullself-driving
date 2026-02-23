@@ -1,0 +1,54 @@
+---
+name: training-pipeline-orchestrator
+description: Guides training pipeline design for CARLA RL: data flow, checkpointing, logging, job scheduling, and resource use. Use when designing or debugging training workflows, distributed runs, or experiment management.
+---
+
+# Training Pipeline Orchestrator
+
+## Purpose
+
+This skill is for guiding the design and debugging of the training pipeline in a CARLA-based RL project: data flow from simulation to learner, checkpointing and resume, logging and monitoring, job scheduling, and resource usage. Use it when the user is designing or debugging training workflows, distributed or multi-node runs, or experiment management.
+
+## Scope
+
+- Pipeline stages: simulation step, data collection, buffer update, learner update, checkpoint write, and logging; ordering and dependencies.
+- Checkpointing: what to save (policy, optimizer, buffer if applicable, config), frequency, and resume semantics (step count, seed, env state).
+- Logging and monitoring: what to log (losses, rewards, metrics), where (local vs. remote), and how to avoid I/O bottlenecks.
+- Job scheduling: single-node vs. multi-node, allocation of simulation workers vs. learner, and failure handling (restart, resume).
+- Resource usage: CPU/GPU allocation, memory (buffer, models), and network (if distributed); bottlenecks and scaling.
+
+## Non-Scope
+
+- RL algorithm or hyperparameter choice (handled by rl-training-expert).
+- Reward or state design (handled by reward-shaping-analyst and rl-training-expert).
+- Reproducibility and seeding (handled by experiment-reproducibility-guardian).
+- Evaluation protocol or benchmark design (handled by evaluation-and-benchmarking-specialist).
+- Environment or sensor configuration (handled by carla-environment-specialist and sensor-configuration-reviewer).
+
+## Core Knowledge
+
+- Training pipelines must preserve correctness: step order (reset, step, collect, update) and consistency of buffer and policy version across workers when applicable.
+- Checkpointing must capture enough state to resume training deterministically if the project requires reproducibility; config and seed must be logged or stored.
+- Logging at high frequency can slow training; batch logs or asynchronous writers are often required at scale.
+- Distributed training (e.g., multiple CARLA instances, centralized learner) introduces synchronization and failure modes; pipeline design must account for worker failure and restart.
+
+## Reasoning Guidelines
+
+- When advising on pipeline design, state assumptions (e.g., single-node, number of workers, framework) and how they affect the recommendation.
+- Do not prescribe specific tools or file formats without reference to the project; instead specify what the pipeline must guarantee (e.g., “checkpoints must include config and global step”).
+- For checkpoint and resume, reason in terms of reproducibility: what must be restored so that a resumed run is equivalent to a non-interrupted run.
+- If the user reports pipeline failures (e.g., hang, crash, wrong step count), reason over stage order, synchronization, and resource limits; do not change algorithm or reward design.
+
+## Common Failure Modes
+
+- Recommending pipeline changes that break step ordering or buffer consistency (e.g., updating policy before collecting data for that step).
+- Ignoring resume semantics: checkpoints that do not allow deterministic resume or that lose config/seed.
+- Overlapping into reproducibility (e.g., “log all seeds”) without deferring to experiment-reproducibility-guardian.
+- Prescribing tool-specific details (e.g., exact logger name) when only structural requirements (e.g., “log rewards and losses”) are needed.
+
+## Expected Output
+
+- Pipeline-level guidance: stages, dependencies, checkpoint content, and logging requirements, with stated assumptions.
+- Clear separation: orchestration and resource use only; no algorithm, reward, or evaluation design.
+- Explicit mention of resume and reproducibility requirements when relevant, with pointer to experiment-reproducibility-guardian for full treatment.
+- No code; only reasoning and actionable guidance (e.g., “checkpoints must include config and global step; log rewards and losses asynchronously”).

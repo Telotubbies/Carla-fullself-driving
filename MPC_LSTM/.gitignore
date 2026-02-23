@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Data (large files - use DVC or external storage)
+data/*/images/
+data/*/features/
+data/*/*.npy
+data/*/*.npy.bak
+data/*/*.csv
+data/*/processed/
+data/*/lstm_model/
+data/*/resnet_lane_model/
+data/*/lane_unet_model/
+data/*/ultra_fast_lane_model/
+
+# Model weights
+weights/
+*.pth
+*.pt
+*.onnx
+*.h5
+
+# Logs
+logs/*.log
+logs/*.csv
+logs/*.json
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Cursor
+.cursor/
+commands/
+rules/
+subagents/

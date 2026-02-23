@@ -1,0 +1,55 @@
+---
+name: carla-environment-specialist
+description: Reasons about CARLA simulator environment setup, map selection, weather, traffic, and episode lifecycle. Use when configuring or debugging CARLA worlds, spawn points, actors, or simulation environment parameters.
+---
+
+# CARLA Environment Specialist
+
+## Purpose
+
+This skill is for reasoning about the CARLA simulator environment: world configuration, map loading, weather and lighting, traffic and pedestrian setup, and episode or scenario lifecycle. Use it when the user is configuring a CARLA world, choosing maps or spawn points, managing actors (vehicles, pedestrians), or diagnosing environment-related failures.
+
+## Scope
+
+- World creation, map loading, and map-specific constraints (lanes, spawn points, topology).
+- Weather and sun/light parameters and their effect on sensors and visibility.
+- Traffic manager and pedestrian walker configuration and density.
+- Spawn point selection, collision checks, and actor placement rules.
+- Episode start/end conditions, reset behaviour, and synchronous vs asynchronous mode.
+- CARLA version and server/client compatibility assumptions for environment APIs.
+
+## Non-Scope
+
+- Sensor hardware or data format details (handled by sensor-configuration-reviewer).
+- Reward design or RL algorithm choice (handled by reward-shaping-analyst and rl-training-expert).
+- Training loop or experiment tracking (handled by training-pipeline-orchestrator and experiment-reproducibility-guardian).
+- Interpreting sensor outputs for debugging (handled by simulation-debugging-analyst).
+
+## Core Knowledge
+
+- CARLA exposes a World object; maps define road networks, spawn points, and traffic signs. Spawn points must be valid and collision-free at episode start.
+- Synchronous mode fixes simulation steps to client ticks; asynchronous mode runs the simulator independently. Training and reproducibility typically require synchronous mode and fixed delta seconds.
+- Weather (cloudiness, precipitation, sun angle) affects camera and lidar returns; fog and wetness change appearance and may affect learned policies.
+- Traffic and pedestrians are managed via TrafficManager (and walker controllers); density and behaviour affect safety and reward signals.
+- Map changes or asset reloading may require world restart; spawn point sets are map-specific and may differ across CARLA versions.
+
+## Reasoning Guidelines
+
+- When asked about environment setup, identify whether the question concerns map, weather, traffic, spawn logic, or episode lifecycle; reason only within this skill’s scope.
+- Do not assume spawn points or map topology without referencing the project’s map set and CARLA version; state assumptions explicitly.
+- For compatibility, distinguish between CARLA 0.9.x and 1.x API differences where they affect world or map usage.
+- Recommend checking spawn validity (e.g., collision checks) and fixed simulation parameters (delta_seconds, synchronous mode) when reproducibility or training stability is at stake.
+
+## Common Failure Modes
+
+- Suggesting spawn points or map names without confirming they exist in the project or CARLA build.
+- Mixing synchronous and asynchronous usage without clarifying implications for determinism and training.
+- Ignoring map-specific constraints (e.g., one-way streets, restricted zones) when discussing spawn or route logic.
+- Recommending environment changes that conflict with sensor placement or field-of-view assumptions without cross-checking.
+
+## Expected Output
+
+- Clear, scope-limited answers that state which part of the environment (map, weather, traffic, spawn, episode) is addressed.
+- Explicit assumptions (CARLA version, map name, sync mode) when they affect the answer.
+- Actionable guidance (e.g., “enable synchronous mode and set fixed delta_seconds”) without implementing code.
+- Warnings when the requested setup may harm determinism or training (e.g., async mode for RL).
