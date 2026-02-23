@@ -2,11 +2,13 @@
 CARLA Client for managing simulation environment.
 
 Handles connection, world setup, vehicle spawning, and sensor management.
+All spawned actors are tracked in an internal registry and destroyed
+automatically on cleanup — no manual killing required between runs.
 """
 
 import carla
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import time
 
 logger = logging.getLogger(__name__)
@@ -28,8 +30,13 @@ class CarlaClient:
         self.vehicle: Optional[carla.Vehicle] = None
         self.blueprint_library: Optional[carla.BlueprintLibrary] = None
         self.spawn_point: Optional[carla.Transform] = None
-        
+
+        # Registry of every actor spawned through this client.
+        # cleanup() will destroy all of them so they never block other vehicles.
+        self._actor_registry: List[carla.Actor] = []
+
         self._connected = False
+        self._cleaned_up = False
         
     def connect(self, max_retries: int = 5) -> bool:
         """
@@ -249,10 +256,11 @@ class CarlaClient:
                     self.spawn_point = spawn_points[spawn_index]
                     logger.info(f"Attempt {attempt+1}/{len(indices_to_try[:max_attempts])}: Trying spawn point {spawn_index}: {self.spawn_point.location}")
                     
-                    # Spawn vehicle
+                    # Spawn vehicle and register it for auto-cleanup
                     self.vehicle = self.world.spawn_actor(vehicle_bp, self.spawn_point)
+                    self._register_actor(self.vehicle)
                     logger.info(f"✅ Vehicle spawned successfully at spawn point {spawn_index}: {self.vehicle.id}")
-                    
+
                     return True
                     
                 except Exception as e:
@@ -322,28 +330,71 @@ class CarlaClient:
         if self.world is not None and self.config.get('synchronous_mode', True):
             self.world.tick()
     
+    def register_actor(self, actor: carla.Actor) -> carla.Actor:
+        """
+        Register an external actor (sensor, NPC, etc.) for auto-cleanup.
+
+        Any actor registered here will be destroyed when cleanup() is called,
+        so nothing is left blocking the map between runs.
+
+        Args:
+            actor: A live CARLA actor returned by world.spawn_actor()
+
+        Returns:
+            The same actor (allows chaining: sensor = client.register_actor(world.spawn_actor(...)))
+        """
+        if actor is not None:
+            self._actor_registry.append(actor)
+        return actor
+
+    def _register_actor(self, actor: carla.Actor) -> None:
+        """Internal helper used by spawn_vehicle."""
+        self.register_actor(actor)
+
     def cleanup(self) -> None:
-        """Clean up CARLA resources."""
+        """
+        Destroy every actor spawned through this client and restore world settings.
+
+        Safe to call multiple times — subsequent calls are no-ops.
+        This is invoked automatically via signal handlers and atexit in main.py,
+        so the vehicle (and any sensors) are always removed even on Ctrl-C or crash.
+        """
+        if self._cleaned_up:
+            return
+        self._cleaned_up = True
+
         logger.info("Cleaning up CARLA resources...")
-        
-        if self.vehicle is not None:
+
+        # Destroy all tracked actors in reverse-spawn order (sensors before vehicle)
+        destroyed = 0
+        for actor in reversed(self._actor_registry):
             try:
-                self.vehicle.destroy()
-                logger.info("✅ Vehicle destroyed")
+                if actor is not None and actor.is_alive:
+                    actor.destroy()
+                    destroyed += 1
             except Exception as e:
-                logger.warning(f"Error destroying vehicle: {e}")
-        
-        # Disable synchronous mode
+                logger.warning(f"Error destroying actor {getattr(actor, 'id', '?')}: {e}")
+
+        self._actor_registry.clear()
+        self.vehicle = None
+
+        if destroyed:
+            logger.info(f"✅ {destroyed} actor(s) destroyed")
+        else:
+            logger.info("No actors to destroy")
+
+        # Restore async mode so the next session starts clean
         if self.world is not None:
             try:
                 settings = self.world.get_settings()
                 settings.synchronous_mode = False
                 self.world.apply_settings(settings)
+                logger.info("✅ Synchronous mode disabled")
             except Exception as e:
                 logger.warning(f"Error disabling synchronous mode: {e}")
-        
+
         self._connected = False
-        logger.info("✅ Cleanup completed")
+        logger.info("✅ CARLA cleanup completed")
     
     def is_connected(self) -> bool:
         """Check if client is connected."""

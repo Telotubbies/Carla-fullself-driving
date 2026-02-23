@@ -17,7 +17,9 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from training.train_lstm import (
-    load_training_data, LSTMSequenceDataset, train_lstm
+    load_data as load_training_data,
+    DrivingSequenceDataset as LSTMSequenceDataset,
+    train as train_lstm,
 )
 from training.load_trained_model import load_trained_lstm
 from training.advanced_training import (
@@ -119,7 +121,7 @@ def finetune_lstm(
     
     # Load training data
     logger.info("Loading training data...")
-    features, states, _, _ = load_training_data(data_dir, use_processed=True)
+    features, states = load_training_data(data_dir)
     
     # Ensure same length
     min_len = min(len(features), len(states))

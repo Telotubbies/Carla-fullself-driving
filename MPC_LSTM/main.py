@@ -6,6 +6,8 @@ Supports both data collection and inference control modes.
 
 import sys
 import os
+import signal
+import atexit
 import yaml
 import logging
 import argparse
