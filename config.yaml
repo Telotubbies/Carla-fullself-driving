@@ -1,90 +1,92 @@
-carla:
-  host: localhost
-  port: 2000
-  timeout: 10.0
-  town: Town04
-  vehicle: vehicle.tesla.model3
-  weather: ClearNoon
-  spawn_point_index: 0
-  synchronous_mode: true
-  fixed_delta_seconds: 0.05
 camera:
-  width: 640
-  height: 480
   fov: 90
   fps: 20
+  height: 480
   location:
     x: 2.0
     y: 0.0
     z: 1.4
   rotation:
     pitch: 0.0
-    yaw: 0.0
     roll: 0.0
-perception:
-  model: resnet18
-  pretrained: true
-  freeze_backbone: false
-  feature_dim: 512
-  input_size:
-  - 640
-  - 480
-  resnet_model_path: data/autopilot_20260208_150902/resnet_lane_model/resnet_lane_final.pth
-  lane_detection_model_path: data/autopilot_20260208_150902/resnet_lane_model/resnet_lane_final.pth
-  use_carla_lane_detection: true
-temporal:
-  input_size: 512
-  hidden_size: 256
-  num_layers: 2
-  sequence_length: 10
-  dropout: 0.1
-  trained_model_path: data/autopilot_20260208_150902/lstm_model/best_model.pth
-mpc:
-  horizon: 10
-  dt: 0.05
-  vehicle:
-    wheelbase: 2.875
-    max_steer: 0.5
-    max_accel: 3.0
-    max_decel: -3.0
-  weights:
-    lateral_error: 10.0
-    heading_error: 5.0
-    velocity_error: 2.0
-    steer_rate: 1.0
-    accel_rate: 1.0
-  constraints:
-    max_speed: 30.0
-    min_speed: 0.0
-visualization:
-  window_width: 1280
-  window_height: 720
-  update_rate: 20
-  show_camera: true
-  show_trajectory: true
-  show_graphs: true
-  graph_history: 1000
+    yaw: 0.0
+  width: 640
+carla:
+  fixed_delta_seconds: 0.05
+  host: localhost
+  port: 2000
+  spawn_point_index: 0
+  synchronous_mode: true
+  timeout: 20.0
+  town: Town04
+  vehicle: vehicle.tesla.model3
+  weather: ClearNoon
 data_collection:
-  enabled: false
-  save_path: data
+  enabled: true
+  save_controls: true
   save_images: true
+  save_path: data
   save_states: true
-  save_controls: true
-logging:
-  level: INFO
-  log_dir: logs
-  save_trajectory: true
-  save_controls: true
-  save_predictions: true
-safety:
-  emergency_brake_enabled: true
-  max_speed_kmh: 30.0
-  collision_timeout: 5.0
 database:
   enabled: false
   postgresql:
-    host: localhost
-    port: 5432
     database: carla_training
-    user: postgres
+    host: localhost
     password: postgres
+    port: 5432
+    user: postgres
+logging:
+  level: INFO
+  log_dir: logs
+  save_controls: true
+  save_predictions: true
+  save_trajectory: true
+mpc:
+  constraints:
+    max_speed: 40.0
+    min_speed: 0.0
+  dt: 0.1
+  horizon: 20
+  vehicle:
+    max_accel: 3.0
+    max_decel: -3.0
+    max_steer: 0.8
+    wheelbase: 2.875
+  weights:
+    accel_rate: 3.0
+    heading_error: 3.0
+    lateral_error: 3.0
+    steer_rate: 30.0
+    steering: 10.0
+    velocity_error: 2.0
+perception:
+  enable_ipm: false
+  feature_dim: 512
+  freeze_backbone: false
+  input_size:
+  - 640
+  - 480
+  lane_detection_type: geometric
+  model: resnet18
+  pretrained: true
+  resnet_model_path: data/autopilot_20260208_150902/resnet_lane_model/resnet_lane_best.pth
+  use_carla_lane_detection: true
+safety:
+  collision_timeout: 5.0
+  emergency_brake_enabled: true
+  max_speed_kmh: 50.0
+temporal:
+  dropout: 0.1
+  hidden_size: 256
+  input_size: 512
+  num_layers: 2
+  sequence_length: 10
+  trained_model_path: data/autopilot_20260223_233442/lstm_model/best_model.pth
+visualization:
+  graph_history: 1000
+  show_camera: true
+  show_graphs: true
+  show_trajectory: true
+  update_rate: 20
+  window_height: 720
+  window_width: 1280

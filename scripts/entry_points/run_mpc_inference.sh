@@ -9,7 +9,7 @@ export AMD_SERIALIZE_KERNEL=3
 export HIP_FORCE_DEV_KERNELS=1
 
 # CARLA environment
-export CARLA_DIR=/home/a/Desktop/CARLA_0.9.16
+export CARLA_DIR=/home/supawich/Desktop/CARLA_0.9.16
 CARLA_EGG=$(find "$CARLA_DIR/PythonAPI/carla/dist" -name "carla-*.egg" 2>/dev/null | head -1)
 export PYTHONPATH="$CARLA_EGG:$PYTHONPATH"
 
@@ -43,4 +43,3 @@ echo ""
 
 # Run inference
 python3 main.py --mode inference
-
