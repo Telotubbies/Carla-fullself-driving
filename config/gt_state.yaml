@@ -1,0 +1,44 @@
+# Ground-truth state builder configuration.
+# Consumed by train_rllib_gt.py and record_episode.py.
+
+perception:
+  max_range: 50.0        # meters, perception radius
+  fov_deg: 120.0         # forward cone (total)
+  n_vehicles: 10         # nearest-N surrounding vehicles
+  k_waypoints: 10        # waypoints ahead
+  waypoint_spacing: 2.0  # meters between sampled waypoints
+
+bev:
+  size: 64               # HxW pixels (64 matches RLlib default CNN filter set)
+  meters_per_cell: 0.8   # resolution -> span = 64 * 0.8 = 51.2m
+  forward_bias: 0.5      # ego row position (0.5 center; higher pushes ego down)
+
+normalization:
+  max_speed: 30.0        # m/s
+  max_accel: 10.0        # m/s^2
+
+noise:
+  pos_sigma: 0.1         # meters, per-axis on surrounding-vehicle rel_x/rel_y
+  vel_sigma: 0.2         # m/s
+  ego_pos_sigma: 0.0     # applied to lat_offset
+  ego_vel_sigma: 0.0     # applied to speed
+  latency_frames: 2      # frames of delay on surrounding-vehicle snapshots
+  dropout_p: 0.05        # per-actor drop probability
+  seed: null
+
+reward:
+  jerk_penalty_weight: 0.02
+
+recording:
+  # Disabled: third-person RGB camera attach/detach crashes CARLA (SIGSEGV)
+  # and leaks sensor streams (millions of "Invalid session" errors).
+  enable: false
+  output_dir: artifacts/episodes
+  every_n_episodes: 5
+  fps: 20
+  third_person_size: [640, 360]
+  bev_upscale: 3
+  log_to_mlflow: true
+
+viz:
+  enable_rviz: false     # set true if ROS2 is sourced and you want live RViz2

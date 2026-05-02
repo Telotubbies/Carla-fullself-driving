@@ -1,0 +1,14 @@
+artifact_uri: /home/supawich/Desktop/carla_sac_ros2_training/mlruns/596103732161477609/7585e588a5934687a8a0c4a27190c95d/artifacts
+end_time: 1777661681460
+entry_point_name: ''
+experiment_id: '596103732161477609'
+lifecycle_stage: active
+run_id: 7585e588a5934687a8a0c4a27190c95d
+run_name: sac_fsd_lowgfx
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777653097679
+status: 3
+tags: []
+user_id: supawich

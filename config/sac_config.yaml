@@ -1,0 +1,63 @@
+# SAC Algorithm Configuration for CARLA Training
+
+sac:
+  # Training hyperparameters
+  gamma: 0.99
+  actor_lr: 0.0003
+  critic_lr: 0.0003
+  alpha_lr: 0.0003
+  train_batch_size: 256
+  target_network_update_freq: 1
+  tau: 0.005
+  
+  # Replay buffer
+  replay_buffer_capacity: 100000
+  prioritized_replay_alpha: 0.6
+  prioritized_replay_beta: 0.4
+  
+  # Optimization
+  actor_learning_rate: 0.0003
+  critic_learning_rate: 0.0003
+  entropy_learning_rate: 0.0003
+  
+  # Entropy coefficient
+  initial_alpha: 1.0
+  target_entropy: auto
+  
+  # Training settings
+  num_steps_sampled_before_learning_starts: 10000
+  twin_q: true
+  policy_delay: 1
+  
+  # Env runners (updated from rollout workers)
+  num_env_runners: 4
+  num_envs_per_env_runner: 1
+  
+  # Resources
+  num_gpus: 1
+  num_cpus_per_env_runner: 2
+  
+  # Evaluation
+  evaluation_interval: 10
+  evaluation_duration: 10
+  evaluation_num_env_runners: 1
+
+training:
+  # General training settings
+  num_iterations: 1000
+  checkpoint_freq: 10
+  checkpoint_at_end: true
+  
+  # Directories
+  log_dir: data/logs
+  tensorboard_dir: data/tensorboard
+  checkpoint_dir: data/checkpoints
+  
+  # Experiment naming
+  experiment_name: carla_sac_training
+  run_name: sac_town01
+  
+  # Weights & Biases (optional)
+  use_wandb: false
+  wandb_project: carla-autonomous-driving
+  wandb_entity: null

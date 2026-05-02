@@ -1,0 +1,256 @@
+# Training Guidelines Configuration
+# กำหนดพารามิเตอร์การเรียนรู้ที่ชัดเจนสำหรับ autonomous driving
+
+# ========================
+# SPEED GUIDELINES (ความเร็ว)
+# ========================
+speed:
+  # ความเร็วเป้าหมาย (km/h)
+  target_speed: 30.0
+  min_speed: 0.0
+  max_speed: 50.0
+  
+  # ความเร็วในสถานการณ์ต่างๆ
+  straight_road: 30.0      # ถนนตรง
+  slight_curve: 25.0       # โค้งเบา (< 30 องศา)
+  sharp_curve: 15.0        # โค้งแหลม (> 30 องศา)
+  intersection: 20.0       # ทางแยก
+  traffic: 20.0            # มีรถอื่น
+  
+  # Reward shaping
+  speed_tolerance: 5.0     # ยอมรับความเร็วผิดพลาด ±5 km/h
+  speed_penalty_scale: 0.1 # scale สำหรับ penalty
+
+# ========================
+# STEERING GUIDELINES (การเลี้ยว)
+# ========================
+steering:
+  # ขอบเขตการเลี้ยว
+  max_steering_angle: 1.0  # -1.0 ถึง 1.0
+  
+  # การเลี้ยวในสถานการณ์ต่างๆ
+  gentle_turn_threshold: 0.3   # เลี้ยวเบา
+  sharp_turn_threshold: 0.7    # เลี้ยวแหลม
+  
+  # Smoothness (ความนุ่มนวล)
+  max_steering_change: 0.2     # การเปลี่ยนแปลง steering สูงสุดต่อ step
+  steering_smoothness_weight: 0.3  # น้ำหนักสำหรับความนุ่มนวล
+  
+  # Reward shaping
+  smooth_steering_bonus: 0.1   # โบนัสสำหรับการเลี้ยวนุ่มนวล
+  jerky_steering_penalty: -0.2 # โทษสำหรับการเลี้ยวกระตุก
+
+# ========================
+# LANE KEEPING GUIDELINES (การอยู่ในเลน)
+# ========================
+lane_keeping:
+  # ระยะห่างจากศูนย์กลางเลน (เมตร)
+  ideal_lane_center: 0.0
+  acceptable_deviation: 0.5    # ยอมรับได้ ±0.5m
+  warning_deviation: 1.0       # เตือน ที่ ±1.0m
+  critical_deviation: 1.5      # วิกฤต ที่ ±1.5m
+  
+  # Reward shaping
+  perfect_lane_bonus: 0.5      # โบนัสสำหรับอยู่กึ่งกลางเลน
+  deviation_penalty_scale: 1.0 # scale สำหรับ penalty
+
+# ========================
+# ACCELERATION GUIDELINES (การเร่ง/เบรก)
+# ========================
+acceleration:
+  # ขอบเขต
+  max_throttle: 1.0
+  max_brake: 1.0
+  
+  # Smoothness
+  max_throttle_change: 0.3     # การเปลี่ยนแปลงสูงสุดต่อ step
+  max_brake_change: 0.5        # เบรกเปลี่ยนได้เร็วกว่า throttle
+  
+  # Comfort (ความสบาย)
+  comfortable_acceleration: 2.0  # m/s² (เร่งสบาย)
+  comfortable_deceleration: 3.0  # m/s² (เบรกสบาย)
+  harsh_acceleration: 4.0        # m/s² (เร่งแรง)
+  harsh_deceleration: 6.0        # m/s² (เบรกแรง)
+  
+  # Reward shaping
+  smooth_accel_bonus: 0.1
+  harsh_accel_penalty: -0.3
+
+# ========================
+# SAFETY GUIDELINES (ความปลอดภัย)
+# ========================
+safety:
+  # ระยะห่างจากสิ่งกีดขวาง (เมตร)
+  min_safe_distance: 5.0       # ระยะปลอดภัยขั้นต่ำ
+  comfortable_distance: 10.0   # ระยะสบาย
+  
+  # Collision
+  collision_penalty: -200.0    # โทษสำหรับการชน
+  near_miss_penalty: -10.0     # โทษสำหรับเกือบชน
+  
+  # Time to collision (TTC)
+  critical_ttc: 2.0            # วิกฤต < 2 วินาที
+  warning_ttc: 4.0             # เตือน < 4 วินาที
+
+# ========================
+# PROGRESS GUIDELINES (ความคืบหน้า)
+# ========================
+progress:
+  # การเคลื่อนที่ไปข้างหน้า
+  min_progress_per_step: 0.1   # เมตร/step ขั้นต่ำ
+  good_progress_per_step: 0.5  # เมตร/step ที่ดี
+  
+  # Reward shaping
+  progress_reward_scale: 1.0
+  backward_penalty: -1.0       # โทษสำหรับถอยหลัง
+  stuck_penalty: -0.5          # โทษสำหรับติดอยู่กับที่
+
+# ========================
+# HEADING GUIDELINES (ทิศทาง)
+# ========================
+heading:
+  # ความผิดพลาดของทิศทาง (องศา)
+  acceptable_heading_error: 5.0    # ยอมรับได้ ±5°
+  warning_heading_error: 15.0      # เตือน ±15°
+  critical_heading_error: 30.0     # วิกฤต ±30°
+  
+  # Reward shaping
+  good_heading_bonus: 0.2
+  heading_error_penalty_scale: 0.5
+
+# ========================
+# EPISODE TERMINATION (การจบ episode)
+# ========================
+termination:
+  # เงื่อนไขการจบ episode
+  max_steps: 1000              # จำนวน steps สูงสุด
+  max_lane_deviation: 2.0      # ออกนอกเลนเกิน 2m
+  max_heading_error: 45.0      # ทิศทางผิดเกิน 45°
+  min_speed_timeout: 100       # ความเร็วต่ำกว่า 1 km/h นาน 100 steps
+  
+  # Success criteria
+  min_distance_for_success: 100.0  # ต้องขับได้อย่างน้อย 100m
+  max_collisions_allowed: 0        # ไม่ยอมให้ชนเลย
+
+# ========================
+# REWARD WEIGHTS (น้ำหนักของ reward)
+# ========================
+reward_weights:
+  # Stage 1: Basic Control
+  stage1:
+    progress: 0.5
+    lane_keeping: 1.0
+    speed_tracking: 0.3
+    smooth_control: 0.1
+    heading_alignment: 0.2
+    collision: 200.0
+  
+  # Stage 2: Navigation
+  stage2:
+    progress: 1.0
+    lane_keeping: 0.5
+    speed_tracking: 0.3
+    smooth_control: 0.2
+    heading_alignment: 0.3
+    collision: 200.0
+  
+  # Stage 3: Complex Scenarios
+  stage3:
+    progress: 0.8
+    lane_keeping: 0.4
+    speed_tracking: 0.4
+    smooth_control: 0.3
+    heading_alignment: 0.2
+    safety_distance: 0.5
+    collision: 200.0
+
+# ========================
+# LEARNING PARAMETERS (พารามิเตอร์การเรียนรู้)
+# ========================
+learning:
+  # Exploration
+  initial_exploration: 0.5     # เริ่มต้น explore 50%
+  final_exploration: 0.05      # สุดท้าย explore 5%
+  exploration_decay: 0.995     # decay rate
+  
+  # Learning rate
+  initial_lr: 3.0e-4
+  min_lr: 1.0e-5
+  lr_decay: 0.99
+  
+  # Batch size
+  batch_size: 256
+  replay_buffer_size: 1000000
+  
+  # Update frequency
+  train_freq: 1
+  gradient_steps: 1
+  target_update_interval: 1
+
+# ========================
+# CURRICULUM LEARNING (การเรียนรู้แบบค่อยเป็นค่อยไป)
+# ========================
+curriculum:
+  # Stage progression
+  auto_progress: true
+  
+  # Stage 1: Basic Control (0-500 episodes)
+  stage1:
+    description: "เรียนรู้การควบคุมพื้นฐาน - ขับตรง, อยู่ในเลน"
+    target_episodes: 500
+    spawn_points: [0, 1, 2]
+    traffic_density: 0.0
+    speed_limit: 30.0
+    allow_curves: false
+    success_criteria:
+      lane_keeping_accuracy: 0.80
+      collision_rate: 0.10
+  
+  # Stage 2: Navigation (500-1500 episodes)
+  stage2:
+    description: "เรียนรู้การเลี้ยว และตามเส้นทาง"
+    target_episodes: 1000
+    spawn_points: [0, 1, 2, 3, 4, 5]
+    traffic_density: 0.1
+    speed_limit: 30.0
+    allow_curves: true
+    success_criteria:
+      path_following_accuracy: 0.70
+      collision_rate: 0.15
+  
+  # Stage 3: Complex Scenarios (1500+ episodes)
+  stage3:
+    description: "จัดการกับสถานการณ์ซับซ้อน"
+    target_episodes: 1500
+    spawn_points: "all"
+    traffic_density: 0.3
+    speed_limit: 30.0
+    allow_curves: true
+    allow_traffic: true
+    success_criteria:
+      completion_rate: 0.60
+      collision_rate: 0.20
+
+# ========================
+# MONITORING (การติดตาม)
+# ========================
+monitoring:
+  # Logging frequency
+  log_interval: 10             # log ทุก 10 steps
+  save_interval: 100           # save model ทุก 100 episodes
+  eval_interval: 50            # evaluate ทุก 50 episodes
+  
+  # Metrics to track
+  track_metrics:
+    - episode_reward
+    - episode_length
+    - collision_rate
+    - lane_deviation
+    - speed_tracking_error
+    - steering_smoothness
+    - success_rate
+  
+  # Visualization
+  enable_visualization: true
+  save_videos: true
+  video_interval: 100          # save video ทุก 100 episodes

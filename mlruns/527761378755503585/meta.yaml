@@ -1,0 +1,8 @@
+artifact_location: /home/supawich/Desktop/carla_sac_ros2_training/mlruns/527761378755503585
+creation_time: 1775762418035
+experiment_id: '527761378755503585'
+last_update_time: 1775762418035
+lifecycle_stage: active
+name: carla_visual_training
+trace_location: null
+workspace: default

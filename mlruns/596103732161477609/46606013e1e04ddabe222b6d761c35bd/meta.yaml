@@ -1,0 +1,14 @@
+artifact_uri: /home/supawich/Desktop/carla_sac_ros2_training/mlruns/596103732161477609/46606013e1e04ddabe222b6d761c35bd/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '596103732161477609'
+lifecycle_stage: active
+run_id: 46606013e1e04ddabe222b6d761c35bd
+run_name: wise-boar-423
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777661682185
+status: 1
+tags: []
+user_id: supawich

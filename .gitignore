@@ -1,0 +1,101 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Training Data
+data/checkpoints/*
+!data/checkpoints/.gitkeep
+data/logs/*
+!data/logs/.gitkeep
+data/tensorboard/*
+!data/tensorboard/.gitkeep
+data/replays/*
+!data/replays/.gitkeep
+
+# Ray/RLlib
+~/ray_results/
+ray_results/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# CARLA
+CarlaUE4/
+*.egg
+
+# ROS2
+install/
+log/
+build/
+
+# Weights & Biases
+wandb/
+
+# Model files
+*.pth
+*.pt
+*.ckpt
+*.h5
+
+# Videos
+*.mp4
+*.avi
+
+# Plots
+*.png
+*.jpg
+*.jpeg
+!docs/*.png
+!docs/*.jpg

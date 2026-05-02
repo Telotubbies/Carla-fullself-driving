@@ -1,0 +1,38 @@
+# Core RL Framework
+ray[rllib]==2.54.1
+torch==2.11.0
+tensorboard
+
+# CARLA
+carla==0.9.16
+
+# ROS2 Python Client
+# Note: Install ROS2 separately via apt, then source it
+# This is just for reference - rclpy comes with ROS2 installation
+
+# Computer Vision & Data Processing
+numpy
+opencv-python
+pillow
+matplotlib
+
+# Configuration & Utilities
+pyyaml
+python-dotenv
+
+# Logging & Monitoring
+wandb
+tqdm
+mlflow>=2.10.0
+
+# Testing
+pytest
+pytest-cov
+
+# Additional ML utilities
+scikit-learn
+pandas
+
+# Imitation Learning
+stable-baselines3
+imitation

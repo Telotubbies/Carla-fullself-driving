@@ -1,0 +1,84 @@
+# CARLA Environment Configuration
+
+carla:
+  # Server connection
+  host: localhost
+  port: 2000
+  timeout: 10.0
+  
+  # Map settings
+  map: Town01
+  # Available maps: Town01, Town02, Town03, Town04, Town05, Town06, Town07, Town10HD
+  
+  # Simulation settings
+  delta_seconds: 0.05  # 20 Hz
+  synchronous_mode: true
+  
+  # Episode settings
+  max_episode_steps: 1000
+  
+  # Sensor configuration
+  sensors:
+    lidar:
+      channels: 64
+      range: 100  # meters
+      points_per_second: 500000
+      rotation_frequency: 20  # Hz
+      upper_fov: 15  # degrees
+      lower_fov: -25  # degrees
+    
+    camera:
+      width: 640
+      height: 480
+      fov: 90  # degrees
+      position:
+        x: 1.5
+        y: 0.0
+        z: 2.4
+      rotation:
+        pitch: -15
+        yaw: 0
+        roll: 0
+    
+    imu:
+      enabled: true
+    
+    collision:
+      enabled: true
+  
+  # BEV (Bird's Eye View) settings
+  bev:
+    range: 50.0  # meters
+    resolution: 256  # pixels
+  
+  # Vehicle spawn settings
+  vehicle:
+    blueprint: vehicle.tesla.model3
+    # Other options: vehicle.audi.a2, vehicle.bmw.grandtourer, etc.
+  
+  # Weather settings (optional)
+  weather:
+    cloudiness: 0.0
+    precipitation: 0.0
+    precipitation_deposits: 0.0
+    wind_intensity: 0.0
+    sun_azimuth_angle: 0.0
+    sun_altitude_angle: 75.0
+  
+  # Traffic settings
+  traffic:
+    num_vehicles: 0
+    num_pedestrians: 0
+    # Set to 0 for training without traffic
+
+# Reward function configuration
+rewards:
+  # Reward weights
+  w_progress: 1.0
+  w_comfort: 0.1
+  w_collision: 200.0
+  w_lane_deviation: 0.5
+  w_speed: 0.2
+  
+  # Target speed (km/h)
+  target_speed_kmh: 30.0

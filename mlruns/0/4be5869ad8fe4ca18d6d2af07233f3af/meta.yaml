@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/4be5869ad8fe4ca18d6d2af07233f3af/artifacts
+end_time: 1777028206082
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 4be5869ad8fe4ca18d6d2af07233f3af
+run_name: exultant-skink-408
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777028206035
+status: 3
+tags: []
+user_id: supawich

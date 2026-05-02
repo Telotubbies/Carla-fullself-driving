@@ -1,0 +1,8 @@
+artifact_location: /home/supawich/Desktop/carla_sac_ros2_training/mlruns/596103732161477609
+creation_time: 1777008418767
+experiment_id: '596103732161477609'
+last_update_time: 1777008418767
+lifecycle_stage: active
+name: carla_rllib_gt_state
+trace_location: null
+workspace: default

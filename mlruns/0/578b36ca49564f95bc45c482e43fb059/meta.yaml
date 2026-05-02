@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/578b36ca49564f95bc45c482e43fb059/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 578b36ca49564f95bc45c482e43fb059
+run_name: upbeat-kit-646
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777013662206
+status: 1
+tags: []
+user_id: supawich

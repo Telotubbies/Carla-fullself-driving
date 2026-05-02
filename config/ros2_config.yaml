@@ -1,0 +1,56 @@
+# ROS2 Configuration for CARLA Integration
+
+ros2:
+  # Node settings
+  node_name: carla_ros_node
+  
+  # Topic names
+  topics:
+    lidar: /carla/ego_vehicle/lidar/point_cloud2
+    camera: /carla/ego_vehicle/camera/rgb/image_raw
+    imu: /carla/ego_vehicle/imu
+    gnss: /carla/ego_vehicle/gnss
+    odometry: /carla/ego_vehicle/odometry
+    speedometer: /carla/ego_vehicle/speedometer
+    control_cmd: /carla/ego_vehicle/control_cmd
+    raw_control: /carla/ego_vehicle/raw_control
+  
+  # QoS Profiles
+  qos:
+    sensor_data:
+      reliability: BEST_EFFORT
+      durability: VOLATILE
+      history: KEEP_LAST
+      depth: 1
+    
+    control_commands:
+      reliability: RELIABLE
+      durability: TRANSIENT_LOCAL
+      history: KEEP_LAST
+      depth: 10
+    
+    map_static:
+      reliability: RELIABLE
+      durability: TRANSIENT_LOCAL
+      history: KEEP_LAST
+      depth: 1
+  
+  # Frame IDs
+  frames:
+    world: map
+    base_link: base_link
+    lidar_link: lidar_link
+    camera_link: camera_link
+    imu_link: imu_link
+    odom: odom
+  
+  # Publishing rates (Hz)
+  rates:
+    odometry: 20
+    speedometer: 20
+    tf: 50
+  
+  # Executor settings
+  executor:
+    type: MultiThreadedExecutor  # or SingleThreadedExecutor
+    num_threads: 4

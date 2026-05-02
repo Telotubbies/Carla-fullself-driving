@@ -1,0 +1,62 @@
+# CARLA SAC Bridge Configuration
+# ROS2 Parameters for CARLA Training System
+
+/**:
+  ros__parameters:
+    # CARLA Connection
+    carla_host: "localhost"
+    carla_port: 2000
+    carla_timeout: 10.0
+    
+    # Training Guidelines
+    use_guidelines: true
+    guidelines_path: "/home/supawich/Desktop/carla_sac_ros2_training/config/training_guidelines.yaml"
+    
+    # Curriculum Learning
+    curriculum_enabled: true
+    auto_stage_transition: true
+    
+    # Publishing Rates (Hz)
+    publish_rate: 20.0
+    camera_rate: 30.0
+    lidar_rate: 20.0
+    odom_rate: 50.0
+    
+    # Sensor Configuration
+    use_camera: true
+    use_lidar: true
+    use_imu: true
+    
+    camera_width: 640
+    camera_height: 480
+    camera_fov: 90
+    
+    lidar_channels: 32
+    lidar_range: 50.0
+    
+    # Environment Settings
+    map_name: "Town01"
+    delta_seconds: 0.05
+    max_episode_steps: 1000
+    
+    # Fixed Spawn Points
+    use_fixed_spawn: true
+    fixed_spawn_indices: [0, 1, 2]
+    
+    # Reward Weights (Stage 1)
+    reward_progress: 0.5
+    reward_lane_keeping: 1.0
+    reward_speed_tracking: 0.3
+    reward_smooth_control: 0.1
+    reward_heading: 0.2
+    reward_collision: 200.0
+    
+    # Safety Parameters
+    min_safe_distance: 5.0
+    max_lane_deviation: 2.0
+    max_heading_error: 45.0
+    
+    # Logging
+    log_level: "info"
+    save_checkpoints: true
+    checkpoint_interval: 100

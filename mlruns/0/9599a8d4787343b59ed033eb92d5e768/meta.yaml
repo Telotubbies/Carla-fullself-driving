@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/9599a8d4787343b59ed033eb92d5e768/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 9599a8d4787343b59ed033eb92d5e768
+run_name: traveling-swan-627
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777652839426
+status: 1
+tags: []
+user_id: supawich

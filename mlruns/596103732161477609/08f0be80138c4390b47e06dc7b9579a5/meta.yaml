@@ -1,0 +1,14 @@
+artifact_uri: /home/supawich/Desktop/carla_sac_ros2_training/mlruns/596103732161477609/08f0be80138c4390b47e06dc7b9579a5/artifacts
+end_time: 1777008957309
+entry_point_name: ''
+experiment_id: '596103732161477609'
+lifecycle_stage: active
+run_id: 08f0be80138c4390b47e06dc7b9579a5
+run_name: sac_gt
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777008938469
+status: 3
+tags: []
+user_id: supawich

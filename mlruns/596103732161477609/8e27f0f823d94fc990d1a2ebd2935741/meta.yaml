@@ -1,0 +1,14 @@
+artifact_uri: /home/supawich/Desktop/carla_sac_ros2_training/mlruns/596103732161477609/8e27f0f823d94fc990d1a2ebd2935741/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '596103732161477609'
+lifecycle_stage: active
+run_id: 8e27f0f823d94fc990d1a2ebd2935741
+run_name: sac_fsd_finetune_gpu
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777652189963
+status: 1
+tags: []
+user_id: supawich
