@@ -89,10 +89,10 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/carla-sac-ros2-training"
-Documentation = "https://carla-sac-ros2-training.readthedocs.io"
-Repository = "https://github.com/yourusername/carla-sac-ros2-training"
-Issues = "https://github.com/yourusername/carla-sac-ros2-training/issues"
+Homepage = "https://github.com/Telotubbies/Carla-fullself-driving"
+Documentation = "https://github.com/Telotubbies/Carla-fullself-driving/tree/main/docs"
+Repository = "https://github.com/Telotubbies/Carla-fullself-driving"
+Issues = "https://github.com/Telotubbies/Carla-fullself-driving/issues"
 
 [tool.setuptools]
 packages = ["src"]

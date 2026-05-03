@@ -178,26 +178,26 @@ source install/setup.bash
 ### Train with Ground-Truth State (recommended for fast iteration)
 
 ```bash
-python train_rllib_gt.py --config config/gt_state.yaml
+python scripts/train/train_rllib_gt.py --config config/gt_state.yaml
 ```
 
 ### Train with Full Pipeline (BEV + perception + guidelines)
 
 ```bash
-python train_rllib_full.py
+python scripts/train/train_rllib_full.py
 ```
 
 ### Train with Stable-Baselines3 SAC
 
 ```bash
-python start_rl_training.py
+python scripts/train/start_rl_training.py
 ```
 
 ### Run Demo (no training)
 
 ```bash
-python demo_simple_drive.py   # constant throttle smoke test
-python demo_autopilot.py      # CARLA built-in autopilot
+python examples/demo_simple_drive.py   # constant throttle smoke test
+python examples/demo_autopilot.py      # CARLA built-in autopilot
 ```
 
 ### Evaluate a Checkpoint
@@ -205,7 +205,7 @@ python demo_autopilot.py      # CARLA built-in autopilot
 ```bash
 bash scripts/evaluate_model.sh
 # or
-python deploy_model.py --checkpoint checkpoints/gt/final
+python scripts/deploy_model.py --checkpoint checkpoints/gt/final
 ```
 
 ### Launch ROS2 Bridge
@@ -265,36 +265,57 @@ bev:
 
 ```
 carla_sac_ros2_training/
-├── src/
-│   ├── carla_gym_env/        # Gym-compatible CARLA environment
-│   ├── sac_trainer/          # RLlib SAC training entry point
-│   ├── ros2_bridge/          # ROS2 sensor/control bridge
-│   ├── perception/           # BEV grid processor, Tesla-style perception
-│   ├── gt_state/             # Ground-truth state builder
-│   ├── env_wrappers/         # Curriculum wrapper, noise injection
-│   ├── curriculum/           # Stage definitions and advance logic
-│   ├── imitation/            # Imitation learning utilities
-│   ├── mlflow_integration/   # MLflow callbacks and logging
-│   └── utils/                # Shared utilities
-├── config/
+├── src/                          # Python packages
+│   ├── carla_gym_env/            # Gym-compatible CARLA environment
+│   ├── sac_trainer/              # RLlib SAC training logic
+│   ├── ros2_bridge/              # ROS2 sensor/control bridge
+│   ├── perception/               # BEV grid, Tesla-style perception
+│   ├── gt_state/                 # Ground-truth state builder
+│   ├── env_wrappers/             # Curriculum wrapper, noise injection
+│   ├── curriculum/               # Stage definitions and advance logic
+│   ├── imitation/                # Imitation learning utilities
+│   ├── mlflow_integration/       # MLflow callbacks and logging
+│   └── utils/                    # Shared utilities
+├── config/                       # YAML configuration
 │   ├── gt_state.yaml
 │   ├── sac_config.yaml
 │   ├── carla_config.yaml
 │   ├── ros2_config.yaml
 │   └── training_guidelines.yaml
-├── scripts/                  # Shell and Python helper scripts
-├── tests/                    # pytest test suite
-├── launch/                   # ROS2 launch files
-├── ros2_ws/                  # Colcon ROS2 workspace
-├── checkpoints/              # Saved RLlib checkpoints
-├── mlruns/                   # MLflow experiment data
-├── artifacts/                # Curriculum state, episode recordings
-├── logs/                     # Training logs
-├── train_rllib_gt.py         # GT-state training entry point
-├── train_rllib_full.py       # Full pipeline training entry point
-├── start_rl_training.py      # SB3 SAC training entry point
-├── deploy_model.py           # Checkpoint deployment / inference
-├── demo_simple_drive.py      # Minimal smoke-test demo
+├── scripts/                      # Utility and automation scripts
+│   ├── train/                    # Training entry points
+│   │   ├── train_rllib_gt.py     # GT-state training (recommended)
+│   │   ├── train_rllib_full.py   # Full pipeline training
+│   │   ├── start_rl_training.py  # SB3 SAC training
+│   │   └── train_sac_simple.py   # Minimal SAC script
+│   ├── deploy_model.py           # Checkpoint deployment / inference
+│   ├── visualize_training.py     # Training curve visualisation
+│   ├── visualize_advanced.py     # Advanced metric visualisation
+│   ├── generate_figures.py       # Figure generation for reports
+│   ├── evaluate_model.sh         # Evaluation shell script
+│   ├── run_ros2_bridge.py        # ROS2 bridge launcher
+│   └── start_training.sh         # Full training shell wrapper
+├── examples/                     # Demo and smoke-test scripts
+│   ├── demo_simple_drive.py      # Constant-throttle smoke test
+│   ├── demo_moving_car.py        # Moving car scenario
+│   └── demo_autopilot.py         # CARLA built-in autopilot demo
+├── tests/                        # pytest test suite
+├── docs/                         # Extended documentation
+│   ├── getting_started.md
+│   ├── training_guide.md
+│   ├── ros2_guide.md
+│   ├── quick_start_ros2.md
+│   ├── tesla_perception.md
+│   └── rust_rl.md
+├── launch/                       # ROS2 launch files
+├── ros2_ws/                      # Colcon ROS2 workspace
+├── checkpoints/                  # Saved RLlib checkpoints
+├── mlruns/                       # MLflow experiment data
+├── artifacts/                    # Curriculum state, episode recordings
+├── logs/                         # Training logs
+├── data/                         # Replay buffers, tensorboard data
+├── Makefile                      # Developer workflow commands
+├── pyproject.toml
 ├── requirements.txt
 └── setup.py
 ```

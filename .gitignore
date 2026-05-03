@@ -72,6 +72,10 @@ rust_rl/
 # Generated figures
 figures/
 
+# Runtime artifacts at root
+training_output.log
+.coverage
+
 # Temporary files
 *.tmp
 *.bak

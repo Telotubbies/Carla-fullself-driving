@@ -102,9 +102,13 @@ carla-restart: carla-stop carla-start ## Restart CARLA server
 
 ##@ Training
 
+train-gt: ## Train SAC with ground-truth state (fast iteration)
+	@echo "$(BLUE)Starting GT-state training...$(NC)"
+	python scripts/train/train_rllib_gt.py --config config/gt_state.yaml
+
 train-sac: ## Train SAC agent (simple version)
 	@echo "$(BLUE)Starting SAC training...$(NC)"
-	python train_sac_simple.py
+	python scripts/train/train_sac_simple.py
 
 train-full: ## Train with full system (Guidelines + Curriculum + Perception)
 	@echo "$(BLUE)Starting full system training...$(NC)"
@@ -122,15 +126,15 @@ demo-perception: ## Run perception system demo
 
 demo-drive: ## Run simple drive demo
 	@echo "$(BLUE)Running drive demo...$(NC)"
-	python demo_simple_drive.py
+	python examples/demo_simple_drive.py
 
 demo-autopilot: ## Run autopilot demo
 	@echo "$(BLUE)Running autopilot demo...$(NC)"
-	python demo_autopilot.py
+	python examples/demo_autopilot.py
 
 visualize: ## Run advanced visualization
 	@echo "$(BLUE)Running visualization...$(NC)"
-	python visualize_advanced.py
+	python scripts/visualize_advanced.py
 
 ##@ ROS2
 
@@ -237,9 +241,9 @@ ci: format-check lint test ## Run CI checks (format, lint, test)
 
 ##@ Quick Commands
 
-quick-train: ## Quick training (100 episodes)
+quick-train: ## Quick training with GT-state (100 episodes)
 	@echo "$(BLUE)Quick training...$(NC)"
-	python scripts/train_with_guidelines.py --episodes 100
+	python scripts/train/train_rllib_gt.py --config config/gt_state.yaml
 
 quick-test: ## Quick test (unit tests only)
 	@echo "$(BLUE)Quick test...$(NC)"
