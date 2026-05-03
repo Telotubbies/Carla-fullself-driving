@@ -14,8 +14,8 @@ bev:
   forward_bias: 0.5      # ego row position (0.5 center; higher pushes ego down)
 
 normalization:
-  max_speed: 30.0        # m/s
-  max_accel: 10.0        # m/s^2
+  max_speed: 35.0        # m/s (~126 km/h) - increased for highway speeds
+  max_accel: 12.0        # m/s^2 - increased for faster acceleration
 
 noise:
   pos_sigma: 0.1         # meters, per-axis on surrounding-vehicle rel_x/rel_y
@@ -28,6 +28,10 @@ noise:
 
 reward:
   jerk_penalty_weight: 0.02
+  lane_center_bonus: 0.5     # Bonus for staying close to lane center
+  progress_weight: 2.0       # Increased progress reward
+  smooth_steering_bonus: 0.3 # Bonus for smooth steering (low jerk)
+  accident_penalty: 500.0    # Heavy penalty for accidents (collision/off-road)
 
 recording:
   # Disabled: third-person RGB camera attach/detach crashes CARLA (SIGSEGV)

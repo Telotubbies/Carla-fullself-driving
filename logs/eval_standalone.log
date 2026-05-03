@@ -1,0 +1,22 @@
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/pygame/pkgdata.py:25: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import resource_stream, resource_exists
+pygame 2.6.1 (SDL 2.28.4, Python 3.12.3)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:231: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:297: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+Connected to CARLA server at localhost:2000
+Loaded map: Town10HD_Opt
+[eval] Pygame control window active
+[eval] Note: Using environment's default action sampling for demo
+[eval] To use trained policy, the model architecture must be reconstructed
+
+[eval] Episode 1/1
+[CurriculumEnvWrapper] stage 8 -> spawns=RANDOM weather=random traffic=0.40 scenarios=['cut_in', 'brake_check', 'pedestrian', 'parking', 'oncoming'] p=0.90
+[CarlaEnv] Spawned ego id=403 at sp_idx=91 (-76.7,24.5) (attempt 1)
+[Weather] Set to: night_rain
+[eval] GIF saved: artifacts/eval_gifs/episode_01.gif (40 frames)
+  Reward: -274.27, Steps: 200, Status: SUCCESS
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  trying to operate on a destroyed actor; an actor's function was called, but the actor is already destroyed.

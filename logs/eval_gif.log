@@ -1,0 +1,130 @@
+nohup: ignoring input
+2026-05-02 10:23:45,601	INFO worker.py:2013 -- Started a local Ray instance.
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/_private/worker.py:2052: FutureWarning: Tip: In future versions of Ray, Ray will no longer override accelerator visible devices env var if num_gpus=0 or num_gpus=None (default). To enable this behavior and turn off this error message, set RAY_ACCEL_ENV_VAR_OVERRIDE_ON_ZERO=0
+  warnings.warn(
+[eval] Loading checkpoint from: checkpoints/gt
+2026-05-02 10:23:46,150	WARNING inference_gif.py:173 -- DeprecationWarning: `build` has been deprecated. Use `AlgorithmConfig.build_algo` instead. This will raise an error in the future!
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/algorithm.py:527: RayDeprecationWarning: This API is deprecated and may be removed in future Ray releases. You could suppress this warning by setting env variable PYTHONWARNINGS="ignore::DeprecationWarning"
+`UnifiedLogger` will be removed in Ray 2.7.
+  return UnifiedLogger(config, logdir, loggers=None)
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/logger/unified.py:53: RayDeprecationWarning: This API is deprecated and may be removed in future Ray releases. You could suppress this warning by setting env variable PYTHONWARNINGS="ignore::DeprecationWarning"
+The `JsonLogger interface is deprecated in favor of the `ray.tune.json.JsonLoggerCallback` interface and will be removed in Ray 2.7.
+  self._loggers.append(cls(self.config, self.logdir, self.trial))
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/logger/unified.py:53: RayDeprecationWarning: This API is deprecated and may be removed in future Ray releases. You could suppress this warning by setting env variable PYTHONWARNINGS="ignore::DeprecationWarning"
+The `CSVLogger interface is deprecated in favor of the `ray.tune.csv.CSVLoggerCallback` interface and will be removed in Ray 2.7.
+  self._loggers.append(cls(self.config, self.logdir, self.trial))
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/logger/unified.py:53: RayDeprecationWarning: This API is deprecated and may be removed in future Ray releases. You could suppress this warning by setting env variable PYTHONWARNINGS="ignore::DeprecationWarning"
+The `TBXLogger interface is deprecated in favor of the `ray.tune.tensorboardx.TBXLoggerCallback` interface and will be removed in Ray 2.7.
+  self._loggers.append(cls(self.config, self.logdir, self.trial))
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:231: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:297: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+Connected to CARLA server at localhost:2000
+Loaded map: Town10HD_Opt
+[CurriculumEnvWrapper] stage 8 -> spawns=RANDOM weather=random traffic=0.40 scenarios=['cut_in', 'brake_check', 'pedestrian', 'parking', 'oncoming'] p=0.90
+[CarlaEnv] Spawned ego id=314 at sp_idx=116 (-48.7,47.0) (attempt 1)
+[Weather] Set to: fog
+[CurriculumEnvWrapper] scenario=pedestrian spawned
+Traceback (most recent call last):
+  File "/home/supawich/Desktop/carla_sac_ros2_training/scripts/inference_gif.py", line 241, in <module>
+    main()
+  File "/home/supawich/Desktop/carla_sac_ros2_training/scripts/inference_gif.py", line 173, in main
+    algo = sac.build()
+           ^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/_common/deprecation.py", line 169, in _ctor
+    return obj(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/algorithm_config.py", line 5906, in build
+    return self.build_algo(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/algorithm_config.py", line 1007, in build_algo
+    return algo_class(
+           ^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac.py", line 574, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/algorithm.py", line 583, in __init__
+    super().__init__(
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/trainable/trainable.py", line 158, in __init__
+    self.setup(copy.deepcopy(self.config))
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/dqn/dqn.py", line 613, in setup
+    super().setup(config)
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/algorithm.py", line 849, in setup
+    self.env_runner_group = EnvRunnerGroup(
+                            ^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/env/env_runner_group.py", line 197, in __init__
+    self._setup(
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/env/env_runner_group.py", line 291, in _setup
+    self._local_env_runner = self._make_worker(
+                             ^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/env/env_runner_group.py", line 1269, in _make_worker
+    return self.env_runner_cls(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/evaluation/rollout_worker.py", line 519, in __init__
+    self._update_policy_map(policy_dict=self.policy_dict)
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/evaluation/rollout_worker.py", line 1729, in _update_policy_map
+    self._build_policy_map(
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/evaluation/rollout_worker.py", line 1833, in _build_policy_map
+    new_policy = create_policy_for_framework(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/utils/policy.py", line 108, in create_policy_for_framework
+    return policy_class(observation_space, action_space, merged_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/policy/policy_template.py", line 273, in __init__
+    self.model, dist_class = make_model_and_action_dist(
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_policy.py", line 109, in build_sac_model_and_action_dist
+    model = build_sac_model(policy, obs_space, action_space, config)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_tf_policy.py", line 80, in build_sac_model
+    model = ModelCatalog.get_model_v2(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/catalog.py", line 639, in get_model_v2
+    return wrapper(
+           ^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_model.py", line 95, in __init__
+    self.action_model = self.build_policy_model(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_model.py", line 157, in build_policy_model
+    model = ModelCatalog.get_model_v2(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/catalog.py", line 639, in get_model_v2
+    return wrapper(
+           ^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/torch/complex_input_net.py", line 79, in __init__
+    self.cnns[i] = ModelCatalog.get_model_v2(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/catalog.py", line 639, in get_model_v2
+    return wrapper(
+           ^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/torch/visionnet.py", line 34, in __init__
+    model_config["conv_filters"] = get_filter_config(obs_space.shape)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/utils.py", line 229, in get_filter_config
+    raise ValueError(
+ValueError: No default CNN configuration for obs shape [128, 128, 5]. You can specify `conv_filters` manually through your AlgorithmConfig's model_config. Default configurations are only available for inputs of the following shapes: [42, 42, K], [84, 84, K], [64, 64, K], [10, 10, K]. You may want to use a custom RLModule or a ConnectorV2 for that.
+WARNING: sensor object went out of the scope but the sensor is still alive in the simulation: Actor 315 (sensor.other.collision) 
+[2026-05-02 10:23:58,092 E 64256 65623] logging.cc:125: Stack trace: 
+ /home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/_raylet.so(+0x170be2a) [0x7f8108f0be2a] ray::operator<<()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/_raylet.so(+0x170c8dc) [0x7f8108f0c8dc] ray::RayLog::operator<< <>()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/_raylet.so(+0x170ee98) [0x7f8108f0ee98] ray::TerminateHandler()
+/lib/x86_64-linux-gnu/libstdc++.so.6(+0xbb0da) [0x7f813e4bb0da]
+/lib/x86_64-linux-gnu/libstdc++.so.6(_ZSt10unexpectedv+0) [0x7f813e4a5a55] std::unexpected()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0x8a84fb) [0x7f7f8c0a84fb]
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0x8c15a8) [0x7f7f8c0c15a8]
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0x8980b5) [0x7f7f8c0980b5] std::_Function_base::_Base_manager<>::_M_manager()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0xa8c8f6) [0x7f7f8c28c8f6] std::_Function_base::_Base_manager<>::_M_manager()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(_ZN5carla9streaming6detail3tcp6ClientD1Ev+0xc8) [0x7f7f8c2ff378] carla::streaming::detail::tcp::Client::~Client()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0xb01df9) [0x7f7f8c301df9] boost::asio::detail::executor_binder_base<>::~executor_binder_base()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0xb05a81) [0x7f7f8c305a81] boost::asio::io_context::strand::dispatch<>()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0xb05c78) [0x7f7f8c305c78] boost::asio::detail::completion_handler<>::do_complete()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(_ZN5boost4asio6detail14strand_service11do_dispatchERPNS2_11strand_implEPNS1_19scheduler_operationE+0x137) [0x7f7f8c30dc27] boost::asio::detail::strand_service::do_dispatch()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0xb05a77) [0x7f7f8c305a77] boost::asio::io_context::strand::dispatch<>()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(+0xb055fc) [0x7f7f8c3055fc] boost::asio::detail::reactive_socket_recv_op<>::do_complete()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(_ZN5boost4asio6detail9scheduler10do_run_oneERNS1_27conditionally_enabled_mutex11scoped_lockERNS1_21scheduler_thread_infoERKNS_6system10error_codeE+0x2fa) [0x7f7f8c26baaa] boost::asio::detail::scheduler::do_run_one()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(_ZN5boost4asio6detail9scheduler3runERNS_6system10error_codeE+0x151) [0x7f7f8c26b591] boost::asio::detail::scheduler::run()
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/carla/libcarla.cpython-312-x86_64-linux-gnu.so(_ZN5boost4asio10io_context3runEv+0x38) [0x7f7f8c270e18] boost::asio::io_context::run()
+/lib/x86_64-linux-gnu/libstdc++.so.6(+0xecdb4) [0x7f813e4ecdb4]
+/lib/x86_64-linux-gnu/libc.so.6(+0x9caa4) [0x7f8141c9caa4]
+/lib/x86_64-linux-gnu/libc.so.6(+0x129c6c) [0x7f8141d29c6c]
+

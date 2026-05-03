@@ -38,7 +38,7 @@ venv.bak/
 *~
 .DS_Store
 
-# Training Data
+# Training Data (keep .gitkeep placeholders)
 data/checkpoints/*
 !data/checkpoints/.gitkeep
 data/logs/*
@@ -56,29 +56,32 @@ ray_results/
 .ipynb_checkpoints/
 *.ipynb
 
-# Testing
+# Testing / Coverage
 .pytest_cache/
 .coverage
 htmlcov/
 *.cover
 .hypothesis/
 
-# Logs
-*.log
+# CARLA bundled API (large, install separately)
+carla_core/
+
+# Rust experiment (optional)
+rust_rl/
+
+# Generated figures
+figures/
 
 # Temporary files
 *.tmp
 *.bak
-*.swp
 
 # CARLA
 CarlaUE4/
-*.egg
 
-# ROS2
+# ROS2 build artifacts
 install/
 log/
-build/
 
 # Weights & Biases
 wandb/
@@ -86,14 +89,13 @@ wandb/
 # Model files
 *.pth
 *.pt
-*.ckpt
 *.h5
 
 # Videos
 *.mp4
 *.avi
 
-# Plots
+# Images (except docs)
 *.png
 *.jpg
 *.jpeg

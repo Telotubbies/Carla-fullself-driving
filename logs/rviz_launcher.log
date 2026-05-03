@@ -1,0 +1,7 @@
+nohup: ignoring input
+[start_rviz] launching carla_rviz_bridge in background...
+[start_rviz] bridge PID=33747  log=logs/rviz_bridge.log
+[start_rviz] launching rviz2 with /home/supawich/Desktop/carla_sac_ros2_training/config/rviz/debug.rviz
+[INFO] [1777662208.699536791] [rviz2]: Stereo is NOT SUPPORTED
+[INFO] [1777662208.699617502] [rviz2]: OpenGl version: 4.6 (GLSL 4.6)
+[INFO] [1777662208.869947417] [rviz2]: Stereo is NOT SUPPORTED

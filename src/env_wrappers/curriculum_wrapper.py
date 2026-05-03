@@ -146,6 +146,18 @@ DEFAULT_STAGES: List["Stage"] = [
         scenario_prob=0.9,
         traffic_density=0.40,
     ),
+    Stage(
+        name="fsd9_highway_speed",
+        spawn_indices=[],
+        reward_threshold=-1400.0,
+        min_episodes=20,
+        description="Highway speed training: up to 120+ km/h, minimal traffic, smooth waypoint following.",
+        weather="random",
+        weather_pool=["clear", "cloudy"],  # Good weather for high speeds
+        scenarios=["cut_in"],  # Only cut-in scenarios at highway speeds
+        scenario_prob=0.4,
+        traffic_density=0.15,  # Low traffic for high speed safety
+    ),
 ]
 
 

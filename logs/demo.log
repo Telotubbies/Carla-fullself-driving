@@ -1,0 +1,53 @@
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:231: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:297: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+============================================================
+🚗 CARLA Autonomous Driving - Simple Deployment Demo
+============================================================
+[deploy] Loaded checkpoint from: /home/supawich/Desktop/carla_sac_ros2_training/checkpoints/gt
+[deploy] Available policies: []
+
+[deploy] Creating CARLA environment...
+Connected to CARLA server at localhost:2000
+Loaded map: Town10HD_Opt
+[EpisodeRecorder] init enable=True (requested=True, imageio_loaded=True) output_dir=artifacts/demo every_n=5 fps=20
+[deploy] Environment ready!
+
+🎬 Starting autonomous driving demo (1 episode, max 600 steps)...
+============================================================
+[CarlaEnv] Spawned ego id=47 at sp_idx=152 (57.6,-67.8) (attempt 1)
+[EpisodeRecorder] recording episode 0 -> artifacts/demo/ep_00000.mp4
+[EpisodeRecorder] STEP_ENTER#1 self.enable=True recording=True writer=yes episode_idx=0 obs_type=dict keys=['vector', 'bev']
+IMAGEIO FFMPEG_WRITER WARNING: input image is not divisible by macro_block_size=16, resizing from (1000, 360) to (1008, 368) to ensure video compatibility with most codecs and players. To prevent resizing, make your input image divisible by the macro_block_size or set the macro_block_size to 1 (risking incompatibility).
+[EpisodeRecorder] STEP_ENTER#2 self.enable=True recording=True writer=yes episode_idx=0 obs_type=dict keys=['vector', 'bev']
+[EpisodeRecorder] STEP_ENTER#3 self.enable=True recording=True writer=yes episode_idx=0 obs_type=dict keys=['vector', 'bev']
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/mlflow/tracking/_tracking_service/utils.py:184: FutureWarning: The filesystem tracking backend (e.g., './mlruns') is deprecated as of February 2026. Consider transitioning to a database backend (e.g., 'sqlite:///mlflow.db') to take advantage of the latest MLflow features. See https://mlflow.org/docs/latest/self-hosting/migrate-from-file-store for migration guidance.
+  return FileStore(store_uri, store_uri)
+  Step  50: speed= 5.3m/s, reward= -0.36
+  Step 100: speed= 8.6m/s, reward= +0.47
+  Step 150: speed=10.8m/s, reward= +0.04
+  Step 200: speed=12.2m/s, reward= -0.16
+  Step 250: speed=12.9m/s, reward= -0.27
+  Step 300: speed=13.2m/s, reward= -0.57
+  Step 350: speed=13.4m/s, reward= -0.50
+  Step 400: speed=13.5m/s, reward= -0.39
+  Step 450: speed=13.7m/s, reward= -0.39
+  Step 500: speed=13.8m/s, reward= -0.40
+  Step 550: speed=13.8m/s, reward= -0.54
+[EpisodeRecorder] episode end (terminated=False truncated=True) frames_written=600
+[EpisodeRecorder] finalized artifacts/demo/ep_00000.mp4 (21879772 bytes, 600 frames)
+  Step 600: speed=13.8m/s, reward= -0.52
+
+============================================================
+📊 DEMO SUMMARY
+============================================================
+  Total steps: 600
+  Total reward: -111.65
+  Avg reward/step: -0.186
+  Status: ✅ COMPLETED (no collision)
+
+🎥 Video saved to: artifacts/demo/
+Environment closed
+
+✅ Demo complete!

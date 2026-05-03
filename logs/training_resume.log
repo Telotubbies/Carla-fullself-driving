@@ -1,0 +1,290 @@
+nohup: ignoring input
+================================================================================
+RLlib SAC w/ Ground-Truth State (no camera/lidar detection)
+================================================================================
+2026-05-02 10:32:19,832	INFO worker.py:2013 -- Started a local Ray instance.
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/_private/worker.py:2052: FutureWarning: Tip: In future versions of Ray, Ray will no longer override accelerator visible devices env var if num_gpus=0 or num_gpus=None (default). To enable this behavior and turn off this error message, set RAY_ACCEL_ENV_VAR_OVERRIDE_ON_ZERO=0
+  warnings.warn(
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/mlflow/tracking/_tracking_service/utils.py:184: FutureWarning: The filesystem tracking backend (e.g., './mlruns') is deprecated as of February 2026. Consider transitioning to a database backend (e.g., 'sqlite:///mlflow.db') to take advantage of the latest MLflow features. See https://mlflow.org/docs/latest/self-hosting/migrate-from-file-store for migration guidance.
+  return FileStore(store_uri, store_uri)
+✅ MLflow Tracker initialized
+   Experiment: carla_rllib_gt_state
+   Tracking URI: ./mlruns
+🚀 MLflow run started: sac_fsd_highspeed_v2
+2026-05-02 10:32:20,595	WARNING train_rllib_gt.py:215 -- DeprecationWarning: `build` has been deprecated. Use `AlgorithmConfig.build_algo` instead. This will raise an error in the future!
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/algorithm.py:527: RayDeprecationWarning: This API is deprecated and may be removed in future Ray releases. You could suppress this warning by setting env variable PYTHONWARNINGS="ignore::DeprecationWarning"
+`UnifiedLogger` will be removed in Ray 2.7.
+  return UnifiedLogger(config, logdir, loggers=None)
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/logger/unified.py:53: RayDeprecationWarning: This API is deprecated and may be removed in future Ray releases. You could suppress this warning by setting env variable PYTHONWARNINGS="ignore::DeprecationWarning"
+The `JsonLogger interface is deprecated in favor of the `ray.tune.json.JsonLoggerCallback` interface and will be removed in Ray 2.7.
+  self._loggers.append(cls(self.config, self.logdir, self.trial))
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/logger/unified.py:53: RayDeprecationWarning: This API is deprecated and may be removed in future Ray releases. You could suppress this warning by setting env variable PYTHONWARNINGS="ignore::DeprecationWarning"
+The `CSVLogger interface is deprecated in favor of the `ray.tune.csv.CSVLoggerCallback` interface and will be removed in Ray 2.7.
+  self._loggers.append(cls(self.config, self.logdir, self.trial))
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/logger/unified.py:53: RayDeprecationWarning: This API is deprecated and may be removed in future Ray releases. You could suppress this warning by setting env variable PYTHONWARNINGS="ignore::DeprecationWarning"
+The `TBXLogger interface is deprecated in favor of the `ray.tune.tensorboardx.TBXLoggerCallback` interface and will be removed in Ray 2.7.
+  self._loggers.append(cls(self.config, self.logdir, self.trial))
+[2026-05-02 10:32:20,659 E 67165 67165] core_worker.cc:2232: Actor with class name: 'RolloutWorker' and ID: '74ff3bd3e42c1c498b476af701000000' has constructor arguments in the object store and max_restarts > 0. If the arguments in the object store go out of scope or are lost, the actor restart will fail. See https://github.com/ray-project/ray/issues/53727 for more details.
+[36m(RolloutWorker pid=67548)[0m /home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:231: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+[36m(RolloutWorker pid=67548)[0m   gym.logger.warn(
+[36m(RolloutWorker pid=67548)[0m /home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:297: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+[36m(RolloutWorker pid=67548)[0m   gym.logger.warn(
+[36m(RolloutWorker pid=67548)[0m Connected to CARLA server at localhost:2000
+[36m(RolloutWorker pid=67548)[0m Loaded map: Town10HD_Opt
+[36m(RolloutWorker pid=67548)[0m [CurriculumEnvWrapper] stage 8 -> spawns=RANDOM weather=random traffic=0.40 scenarios=['cut_in', 'brake_check', 'pedestrian', 'parking', 'oncoming'] p=0.90
+[36m(RolloutWorker pid=67548)[0m [CarlaEnv] Spawned ego id=490 at sp_idx=28 (-41.7,89.7) (attempt 1)
+[36m(RolloutWorker pid=67548)[0m [Weather] Set to: rain
+[36m(RolloutWorker pid=67548)[0m [CurriculumEnvWrapper] scenario=cut_in spawned
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:231: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/gymnasium/spaces/box.py:297: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+Connected to CARLA server at localhost:2000
+Loaded map: Town10HD_Opt
+[CurriculumEnvWrapper] stage 8 -> spawns=RANDOM weather=random traffic=0.40 scenarios=['cut_in', 'brake_check', 'pedestrian', 'parking', 'oncoming'] p=0.90
+[CarlaEnv] Spawned ego id=578 at sp_idx=116 (-48.7,47.0) (attempt 1)
+[Weather] Set to: fog
+[CurriculumEnvWrapper] scenario=pedestrian spawned
+2026-05-02 10:32:43,603	INFO trainable.py:161 -- Trainable.setup took 23.000 seconds. If your trainable is slow to initialize, consider setting reuse_actors=True to reduce actor creation overheads.
+2026-05-02 10:32:43,604	WARNING util.py:62 -- Install gputil for GPU system monitoring.
+[resume] Restoring from: /home/supawich/Desktop/carla_sac_ros2_training/checkpoints/gt
+2026-05-02 10:32:43,670	INFO trainable.py:578 -- Restored on 192.168.110.31 from checkpoint: Checkpoint(filesystem=local, path=/home/supawich/Desktop/carla_sac_ros2_training/checkpoints/gt)
+[resume] Restored successfully.
+[Curriculum] start at stage 0 (fsd0_lane_keeping) spawns=[0, 1, 2]
+[36m(RolloutWorker pid=67548)[0m ERROR: failed to destroy actor 554 : unable to destroy actor: not found 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 492 (vehicle.citroen.c3) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 493 (vehicle.tesla.cybertruck) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 494 (vehicle.lincoln.mkz_2017) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 495 (vehicle.audi.tt) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 496 (vehicle.nissan.patrol) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 497 (vehicle.micro.microlino) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 498 (vehicle.audi.tt) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 499 (vehicle.tesla.cybertruck) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 500 (vehicle.dodge.charger_police) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 501 (vehicle.bmw.grandtourer) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 502 (vehicle.ford.ambulance) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 503 (vehicle.audi.a2) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 504 (vehicle.carlamotors.carlacola) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 505 (vehicle.chevrolet.impala) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 506 (vehicle.audi.etron) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 507 (vehicle.mercedes.coupe_2020) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 508 (vehicle.mini.cooper_s_2021) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 509 (vehicle.jeep.wrangler_rubicon) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 510 (vehicle.lincoln.mkz_2017) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 511 (vehicle.audi.a2) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 512 (vehicle.ford.crown) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 513 (vehicle.lincoln.mkz_2020) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 514 (vehicle.toyota.prius) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 515 (vehicle.volkswagen.t2) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 516 (vehicle.jeep.wrangler_rubicon) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 517 (vehicle.mercedes.sprinter) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 518 (vehicle.micro.microlino) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 519 (vehicle.nissan.micra) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 520 (vehicle.ford.crown) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 521 (vehicle.nissan.patrol_2021) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 522 (vehicle.ford.ambulance) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 523 (vehicle.audi.etron) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 524 (vehicle.mitsubishi.fusorosa) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 525 (vehicle.seat.leon) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 526 (vehicle.carlamotors.firetruck) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 527 (vehicle.tesla.cybertruck) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 528 (vehicle.tesla.model3) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 529 (vehicle.mercedes.coupe_2020) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 530 (vehicle.tesla.cybertruck) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 531 (vehicle.chevrolet.impala) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 532 (vehicle.jeep.wrangler_rubicon) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 533 (vehicle.tesla.cybertruck) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 534 (vehicle.micro.microlino) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 535 (vehicle.audi.tt) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 536 (vehicle.mercedes.coupe_2020) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 537 (vehicle.nissan.micra) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 538 (vehicle.volkswagen.t2) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 539 (vehicle.nissan.patrol) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 540 (vehicle.toyota.prius) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 541 (vehicle.carlamotors.firetruck) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 542 (vehicle.volkswagen.t2) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 543 (vehicle.mini.cooper_s) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 544 (vehicle.micro.microlino) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 545 (vehicle.tesla.model3) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 546 (vehicle.micro.microlino) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 547 (vehicle.audi.tt) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 548 (vehicle.nissan.micra) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 549 (vehicle.volkswagen.t2_2021) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 550 (vehicle.audi.etron) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 551 (vehicle.dodge.charger_police_2020) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 552 (vehicle.mercedes.coupe_2020) 
+[36m(RolloutWorker pid=67548)[0m WARNING: attempting to destroy an actor that is already dead: Actor 553 (vehicle.dodge.charger_police) 
+[36m(RolloutWorker pid=67548)[0m ERROR: failed to destroy actor 490 : unable to destroy actor: not found 
+[36m(RolloutWorker pid=67548)[0m [CurriculumEnvWrapper] stage 0 -> spawns=[0, 1, 2] weather=clear traffic=0.00 scenarios=[] p=0.00
+[36m(RolloutWorker pid=67548)[0m [CarlaEnv] Spawned ego id=644 at sp_idx=0 (-64.6,24.5) (attempt 1)
+[36m(RolloutWorker pid=67548)[0m [Weather] Set to: clear
+2026-05-02 10:32:43,940	WARNING train_ops.py:114 -- DeprecationWarning: `ray.rllib.execution.train_ops.multi_gpu_train_one_step` has been deprecated. This will raise an error in the future!
+final checkpoint: TrainingResult(checkpoint=Checkpoint(filesystem=local, path=./checkpoints/gt/final), metrics={})
+Environment closed
+✅ MLflow run ended
+Traceback (most recent call last):
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/policy/torch_policy.py", line 1069, in _worker
+    self._loss(self, model, self.dist_class, sample_batch)
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_policy.py", line 276, in actor_critic_loss
+    q_tp1, _ = target_model.get_q_values(target_model_out_tp1, policy_tp1)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_model.py", line 221, in get_q_values
+    return self._get_q_value(model_out, actions, self.q_net)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_model.py", line 266, in _get_q_value
+    return net(input_dict, [], None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/modelv2.py", line 257, in __call__
+    res = self.forward(restored, state or [], seq_lens)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/torch/complex_input_net.py", line 190, in forward
+    cnn_out, _ = self.cnns[i](SampleBatch({SampleBatch.OBS: component}))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/modelv2.py", line 257, in __call__
+    res = self.forward(restored, state or [], seq_lens)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/torch/visionnet.py", line 246, in forward
+    conv_out = self._convs(self._features)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/container.py", line 253, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/torch/misc.py", line 253, in forward
+    return self._model(x)
+           ^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/container.py", line 253, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/conv.py", line 553, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/conv.py", line 548, in _conv_forward
+    return F.conv2d(
+           ^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 16.00 MiB. GPU 0 has a total capacity of 11.62 GiB of which 908.12 MiB is free. Process 57404 has 8.55 GiB memory in use. Including non-PyTorch memory, this process has 1.69 GiB memory in use. Of the allocated memory 1.31 GiB is allocated by PyTorch, and 27.08 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/supawich/Desktop/carla_sac_ros2_training/train_rllib_gt.py", line 326, in <module>
+    main()
+  File "/home/supawich/Desktop/carla_sac_ros2_training/train_rllib_gt.py", line 263, in main
+    result = algo.train()
+             ^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/trainable/trainable.py", line 331, in train
+    raise skipped from exception_cause(skipped)
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/tune/trainable/trainable.py", line 328, in train
+    result = self.step()
+             ^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/algorithm.py", line 1271, in step
+    ) = self._run_one_training_iteration_old_api_stack()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/algorithm.py", line 4414, in _run_one_training_iteration_old_api_stack
+    training_step_results = self.training_step()
+                            ^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/dqn/dqn.py", line 643, in training_step
+    return self._training_step_old_api_stack()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/dqn/dqn.py", line 832, in _training_step_old_api_stack
+    train_results = multi_gpu_train_one_step(self, train_batch)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/execution/train_ops.py", line 181, in multi_gpu_train_one_step
+    results = policy.learn_on_loaded_batch(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/policy/torch_policy.py", line 596, in learn_on_loaded_batch
+    tower_outputs = self._multi_gpu_parallel_grad_calc(device_batches)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/policy/torch_policy.py", line 1154, in _multi_gpu_parallel_grad_calc
+    raise last_result[0] from last_result[1]
+ValueError: Error In tower 0 on device cuda:0 during multi GPU parallel gradient calculation:: CUDA out of memory. Tried to allocate 16.00 MiB. GPU 0 has a total capacity of 11.62 GiB of which 908.12 MiB is free. Process 57404 has 8.55 GiB memory in use. Including non-PyTorch memory, this process has 1.69 GiB memory in use. Of the allocated memory 1.31 GiB is allocated by PyTorch, and 27.08 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)
+Traceback: 
+Traceback (most recent call last):
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/policy/torch_policy.py", line 1069, in _worker
+    self._loss(self, model, self.dist_class, sample_batch)
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_policy.py", line 276, in actor_critic_loss
+    q_tp1, _ = target_model.get_q_values(target_model_out_tp1, policy_tp1)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_model.py", line 221, in get_q_values
+    return self._get_q_value(model_out, actions, self.q_net)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/algorithms/sac/sac_torch_model.py", line 266, in _get_q_value
+    return net(input_dict, [], None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/modelv2.py", line 257, in __call__
+    res = self.forward(restored, state or [], seq_lens)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/torch/complex_input_net.py", line 190, in forward
+    cnn_out, _ = self.cnns[i](SampleBatch({SampleBatch.OBS: component}))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/modelv2.py", line 257, in __call__
+    res = self.forward(restored, state or [], seq_lens)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/torch/visionnet.py", line 246, in forward
+    conv_out = self._convs(self._features)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/container.py", line 253, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/ray/rllib/models/torch/misc.py", line 253, in forward
+    return self._model(x)
+           ^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/container.py", line 253, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/conv.py", line 553, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/supawich/Desktop/carla_sac_ros2_training/venv/lib/python3.12/site-packages/torch/nn/modules/conv.py", line 548, in _conv_forward
+    return F.conv2d(
+           ^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 16.00 MiB. GPU 0 has a total capacity of 11.62 GiB of which 908.12 MiB is free. Process 57404 has 8.55 GiB memory in use. Including non-PyTorch memory, this process has 1.69 GiB memory in use. Of the allocated memory 1.31 GiB is allocated by PyTorch, and 27.08 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)
+
+
